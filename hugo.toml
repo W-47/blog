@@ -12,7 +12,7 @@ theme='binario'
   authorbox = true
   related = true
   columns = 2
-  customCSS = ["custom.css"]
+  
 [Params.Entry]
   toc = true
   tocOpen = true
