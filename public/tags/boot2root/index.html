@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Boot2root | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Boot2root">
+  <meta itemprop="datePublished" content="2024-06-13T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-06-13T00:00:00+00:00">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="stylesheet" href="/custom.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+	<link rel="alternate" type="application/rss+xml" href="/tags/boot2root/index.xml" title="Dexter">
+</head>
+<body class="body kind-term">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="page block">
+			<h1 class="page__title">Boot2root</h1>
+			
+		</div>
+		<div class="cards">
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/offsec/gaar/">Gaar</a></h1>
+	<div class="entry__content"><h1 id="introduction">Introduction</h1>
+<p>In today&rsquo;s post, we have another easy box from <a href="https://portal.offsec.com/labs/play">offsec playgrounds</a>. The goal here was to use a mix of automated tools to be able to brute the password of a user to get initial foothold. Then we could escalate our privileges using a nice GTFO bin.</p>
+<p>Let&rsquo;s learn.</p>
+<h2 id="enumaration">Enumaration</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>cat nmap.txt
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nmap 7.94SVN scan initiated Thu Apr 25 18:43:07 2024 as: nmap -sVC -T4 -vv -oN nmap.txt 192.168.219.142</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> 192.168.219.142
+</span></span><span style="display:flex;"><span>Host is up, received echo-reply ttl <span style="color:#ae81ff">61</span> <span style="color:#f92672">(</span>0.14s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>Scanned at 2024-04-25 18:43:08 EAT <span style="color:#66d9ef">for</span> 26s
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">998</span> closed tcp ports <span style="color:#f92672">(</span>reset<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>PORT   STATE SERVICE REASON         VERSION
+</span></span><span style="display:flex;"><span>22/tcp open  ssh     syn-ack ttl <span style="color:#ae81ff">61</span> OpenSSH 7.9p1 Debian 10+deb10u2 <span style="color:#f92672">(</span>protocol 2.0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ssh-hostkey: 
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">2048</span> 3e:a3:6f:64:03:33:1e:76:f8:e4:98:fe:be:e9:8e:58 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS8evJ7ywX5kz396YcIuR+rucTJ/OAK1SSpQoyx6Avj3v1/ZeRvikDEBZRZE4KMV4/+LraxOvCIb0rkU98B5WME6IReWvGTbF99x6wc2sDCG5haD5/OI6At8xrEQPV6FL8NqipouEeYXU5lp/aR7vsdJAs/748uo6Xu4xwUWKFit3RvCHAdhuNfXj5bpiWESerc6mjRm1dPIwIUjJb2zBKTMFiVxpl8R3BXRLV7ISaKQwEo5zp8OzfxDF0YQ5WxMSaKu6fsBh/XDHr+m2A7TLPfIJPS2i2Y8EPxymUahuhSq63nNSaaWNdSZwpbL0qCBPdn1jtTjh26fGbmPeFVdw1
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 6c:0e:b5:00:e7:42:44:48:65:ef:fe:d7:7c:e6:64:d5 <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPFPC21nXnF1t6XmiDOwcXTza1K6jFzzUhlI+zb878mxsPin/9KvLlW9up9ECWVVTKbiIieN8cD0rF7wb3EjkHA<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> b7:51:f2:f9:85:57:66:a8:65:54:2e:05:f9:40:d2:f4 <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBprcu3jXo9TbgN5tBKvrojw4OFUkQIH+dITgacg3BLV
+</span></span><span style="display:flex;"><span>80/tcp open  http    syn-ack ttl <span style="color:#ae81ff">61</span> Apache httpd 2.4.38 <span style="color:#f92672">((</span>Debian<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>| http-methods: 
+</span></span><span style="display:flex;"><span>|_  Supported Methods: OPTIONS HEAD GET POST
+</span></span><span style="display:flex;"><span>|_http-title: Gaara
+</span></span><span style="display:flex;"><span>|_http-server-header: Apache/2.4.38 <span style="color:#f92672">(</span>Debian<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Read data files from: /usr/bin/../share/nmap
+</span></span><span style="display:flex;"><span>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nmap done at Thu Apr 25 18:43:34 2024 -- 1 IP address (1 host up) scanned in 27.31 seconds</span>
+</span></span></code></pre></div><p>Here we go for a simple <code>nmap</code> scan.</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/offsec/amaterasu/">Amaterasu</a></h1>
+	<div class="entry__content"><h1 id="introduction">Introduction</h1>
+<p>In this writeup we are going to check out a machine available on the <a href="https://portal.offsec.com/labs/play">offsec playgrounds</a>.</p>
+<p>The idea here was to learn how to use curl and upload files that would ultimately help us into getting an initial foothold into the machine and then use the old tar wildcard to escalate our privileges.</p>
+<p>Let&rsquo;s learn.</p>
+<h2 id="nmap">Nmap</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sudo nmap -T4 -sVC 192.168.241.249 -oN nmap.txt -vv
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PORT      STATE  SERVICE          REASON         VERSION
+</span></span><span style="display:flex;"><span>21/tcp    open   ftp              syn-ack ttl <span style="color:#ae81ff">61</span> vsftpd 3.0.3
+</span></span><span style="display:flex;"><span>| ftp-syst: 
+</span></span><span style="display:flex;"><span>|   STAT: 
+</span></span><span style="display:flex;"><span>| FTP server status:
+</span></span><span style="display:flex;"><span>|      Connected to 192.168.45.214
+</span></span><span style="display:flex;"><span>|      Logged in as ftp
+</span></span><span style="display:flex;"><span>|      TYPE: ASCII
+</span></span><span style="display:flex;"><span>|      No session bandwidth limit
+</span></span><span style="display:flex;"><span>|      Session timeout in seconds is <span style="color:#ae81ff">300</span>
+</span></span><span style="display:flex;"><span>|      Control connection is plain text
+</span></span><span style="display:flex;"><span>|      Data connections will be plain text
+</span></span><span style="display:flex;"><span>|      At session startup, client count was <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>|      vsFTPd 3.0.3 - secure, fast, stable
+</span></span><span style="display:flex;"><span>|_End of status
+</span></span><span style="display:flex;"><span>| ftp-anon: Anonymous FTP login allowed <span style="color:#f92672">(</span>FTP code 230<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>|_Can<span style="color:#960050;background-color:#1e0010">&#39;</span>t get directory listing: TIMEOUT
+</span></span></code></pre></div><p>Open port is 21 which has anonymous login, interesting. But then nothing really was happening in here and so I had to opt for another nmap scan, scanning for all open ports just to see if we can find some interesting things.</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/htb/surveillance/">Surveillance</a></h1>
+	<div class="entry__content"><h2 id="step-by-step-methodology">Step by step methodology</h2>
+<h1 id="nmap-scan">Nmap scan</h1>
+<p>First of all we can do some basic enumeration like checking for open ports and this is made possible by using a tool called nmap, which is used for network discovery and security auditing. We are also going to pass some options to the command let us break it down first:</p>
+<pre><code>-sVC: These are options passed to Nmap: 
+
+-s: This option specifies the type of scan to perform. In this case, -s indicates that a TCP SYN scan is being performed. This scan technique sends SYN packets to the target ports and analyzes the responses to determine which ports are open. 
+
+V: This option increases verbosity, providing more detailed information about the scan process and results. 
+
+C: This option enables version detection. When version detection is enabled, Nmap attempts to determine the versions of the services running on the open ports by analyzing their responses. 
+
+-T4: This option sets the timing template for the scan. Timing templates control the speed and aggressiveness of the scan. -T4 is a relatively aggressive timing template, indicating that the scan should be conducted at a fast pace, but not at the fastest possible speed (-T5). This helps to balance speed with reliability and accuracy. 
+</code></pre>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ sudo nmap -sVC -T4 10.10.11.245 -vv  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>sudo<span style="color:#f92672">]</span> password <span style="color:#66d9ef">for</span> dexter:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 7.94SVN <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2024-02-22 02:01 EST 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Loaded <span style="color:#ae81ff">156</span> scripts <span style="color:#66d9ef">for</span> scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script Pre-scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Ping Scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning 10.10.11.245 <span style="color:#f92672">[</span><span style="color:#ae81ff">4</span> ports<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Ping Scan at 02:01, 0.15s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> total hosts<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 02:01, 0.17s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating SYN Stealth Scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning 10.10.11.245 <span style="color:#f92672">[</span><span style="color:#ae81ff">1000</span> ports<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Discovered open port 80/tcp on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Discovered open port 22/tcp on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Increasing send delay <span style="color:#66d9ef">for</span> 10.10.11.245 from <span style="color:#ae81ff">0</span> to <span style="color:#ae81ff">5</span> due to <span style="color:#ae81ff">375</span> out of <span style="color:#ae81ff">937</span> dropped probes since last increase. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Increasing send delay <span style="color:#66d9ef">for</span> 10.10.11.245 from <span style="color:#ae81ff">5</span> to <span style="color:#ae81ff">10</span> due to <span style="color:#ae81ff">11</span> out of <span style="color:#ae81ff">12</span> dropped probes since last increase. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed SYN Stealth Scan at 02:01, 9.63s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1000</span> total ports<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Service scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning <span style="color:#ae81ff">2</span> services on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Service scan at 02:01, 7.40s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">2</span> services on <span style="color:#ae81ff">1</span> host<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script scanning 10.10.11.245. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 6.45s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.63s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.01s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host is up, received echo-reply ttl <span style="color:#ae81ff">63</span> <span style="color:#f92672">(</span>0.15s latency<span style="color:#f92672">)</span>. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanned at 2024-02-22 02:01:41 EST <span style="color:#66d9ef">for</span> 24s 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">998</span> closed tcp ports <span style="color:#f92672">(</span>reset<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PORT   STATE SERVICE REASON         VERSION 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>22/tcp open  ssh     syn-ack ttl <span style="color:#ae81ff">63</span> OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 <span style="color:#f92672">(</span>Ubuntu Linux; protocol 2.0<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| ssh-hostkey:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 96:07:1c:c6:77:3e:07:a0:cc:6f:24:19:74:4d:57:0b <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBN+/g3FqMmVlkT3XCSMH/JtvGJDW3+PBxqJ+pURQey6GMjs7abbrEOCcVugczanWj1WNU5jsaYzlkCEZHlsHLvk<span style="color:#f92672">=</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 0b:a4:c0:cf:e2:3b:95:ae:f6:f5:df:7d:0c:88:d6:ce <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIm6HJTYy2teiiP6uZoSCHhsWHN+z3SVL/21fy6cZWZi 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>80/tcp open  http    syn-ack ttl <span style="color:#ae81ff">63</span> nginx 1.18.0 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_http-server-header: nginx/1.18.0 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_http-title: Did not follow redirect to http://surveillance.htb/ 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| http-methods:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_  Supported Methods: GET HEAD POST OPTIONS 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script Post-scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.01s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Read data files from: /usr/bin/../share/nmap 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ . 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 25.56 seconds 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>           Raw packets sent: <span style="color:#ae81ff">1643</span> <span style="color:#f92672">(</span>72.268KB<span style="color:#f92672">)</span> | Rcvd: <span style="color:#ae81ff">1023</span> <span style="color:#f92672">(</span>40.916KB<span style="color:#f92672">)</span> 
+</span></span></code></pre></div><p>Running an Nmap scan I see that we have 2 ports open that is port 80 and port 22. Let us break that down:</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/thm/alice/">Alice in Wonderland</a></h1>
+	<div class="entry__content"><p>Hello and welcome to the tryhack me writeup <a href="https://tryhackme.com/room/wonderland">Alice on wonderland</a>.</p>
+<h1 id="overview">OVERVIEW</h1>
+<p>So we will be trying to get some credentials and log in as a particular user and then try to escalate our priviledges to root and get the flag. With that said lets get to it</p>
+<h1 id="nmap-scan">NMAP SCAN</h1>
+<p>After a quick nmap scan we can see that the port 22 and port 80 are open.
+<img src="https://i.ibb.co/QpsyvgL/nmap.png" alt="1"></p>
+<h1 id="web-enumaration">WEB ENUMARATION</h1>
+<p>From the previous nmap scan we can see that a web server is hosted on port 80 and we can use the IP to see it</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/thm/archangel/">Archangel</a></h1>
+	<div class="entry__content"><p>Hello guys and welcome to yet another writeup. This is ye another easy box on tryhackme and is accessible <a href="https://tryhackme.com/room/archangel">here</a>
+We shall tackle some awesome topics which include:</p>
+<ol>
+<li>LFI.</li>
+<li>Priviledge exploitation.</li>
+<li>Web exploitation.
+With that said let us get right to it</li>
+</ol>
+<h2 id="nmap-scan">NMAP scan.</h2>
+<p>As usual we are gonna start of by scanning open ports on our machine.
+<img src="https://i.ibb.co/ZVjYSZ9/nmap.png" alt="1"></p>
+<p>We are able to see that port 80 is open and is hosting a web application.
+we are able to view a home page which does not have alot on it but we can see a type of hostname</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/thm/bountyhacker/">Bounty Hacker</a></h1>
+	<div class="entry__content"><p>Hello guys and welcome to another writeup featuring linux priviledge escalation. This is an easy box on tryhackme and you can access it <a href="https://tryhackme.com/room/cowboyhacker">here</a></p>
+<h2 id="overview">OVERVIEW</h2>
+<p>Okay quick overview, so we will be trying to bruteforce ssh and get some credentials for the box. I had fun on it and I hope you will to so lets get to it.</p>
+<h2 id="nmap-scan">NMAP SCAN</h2>
+<p>First things first a quick nmap scan to check on the open ports.</p></div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/thm/dogcat/">DogCat</a></h1>
+	<div class="entry__content"><p>Hello guys and welcome to yet another Tryhackme writeup. Today we will be handling a medium room which is accessible <a href="https://tryhackme.com/room/dogcat">here</a>.</p>
+<p>Well the methodology is quite similar to the Archangel methodology with quite a twist. Let&rsquo;s begin.</p>
+<h2 id="accessing-the-webpage">ACCESSING THE WEBPAGE</h2>
+<p>So I ran an NMAP scan but that was not so productive, so I went directly into the site.</p>
+<p>First we see that the site has two buttons which when we click on dog for example, we get a picture of a dog.
+<img src="https://i.ibb.co/1K4zM53/dog.png" alt="1"></p></div>
+</article>
+				</div>
+			
+		</div>
+	</main>
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,29 @@
+baseURL = '/'
+languageCode = 'en-us'
+title = 'Dexter'
+theme='binario'
+
+[Author]
+  name = "Dexter"
+  bio = "Just human"
+
+[Params]
+  schema = true
+  authorbox = true
+  related = true
+  columns = 2
+  customCSS = ["custom.css"]
+[Params.Entry]
+  toc = true
+  tocOpen = true
+
+[Params.Social]
+  github = "w-47"
+  email = "dexter7isme@gmail.com"
+
+[Params.Share]
+  twitter = true
+  linkedin = true
+
+[Params.Featured]
+  previewOnly = false

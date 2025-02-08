@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Python Library Hijacking on Dexter</title>
+    <link>//localhost:1313/tags/python-library-hijacking/</link>
+    <description>Recent content in Python Library Hijacking on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 31 Dec 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/python-library-hijacking/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Alice in Wonderland</title>
+      <link>//localhost:1313/posts/thm/alice/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/alice/</guid>
+      <description>&lt;p&gt;Hello and welcome to the tryhack me writeup &lt;a href=&#34;https://tryhackme.com/room/wonderland&#34;&gt;Alice on wonderland&lt;/a&gt;.&lt;/p&gt;&#xA;&lt;h1 id=&#34;overview&#34;&gt;OVERVIEW&lt;/h1&gt;&#xA;&lt;p&gt;So we will be trying to get some credentials and log in as a particular user and then try to escalate our priviledges to root and get the flag. With that said lets get to it&lt;/p&gt;&#xA;&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP SCAN&lt;/h1&gt;&#xA;&lt;p&gt;After a quick nmap scan we can see that the port 22 and port 80 are open.&#xA;&lt;img src=&#34;https://i.ibb.co/QpsyvgL/nmap.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;web-enumaration&#34;&gt;WEB ENUMARATION&lt;/h1&gt;&#xA;&lt;p&gt;From the previous nmap scan we can see that a web server is hosted on port 80 and we can use the IP to see it&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

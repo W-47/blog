@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Bounty Hacker | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Bounty Hacker">
+  <meta itemprop="description" content="Hello guys and welcome to another writeup featuring linux priviledge escalation. This is an easy box on tryhackme and you can access it here
+OVERVIEW Okay quick overview, so we will be trying to bruteforce ssh and get some credentials for the box. I had fun on it and I hope you will to so lets get to it.
+NMAP SCAN First things first a quick nmap scan to check on the open ports.">
+  <meta itemprop="datePublished" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="wordCount" content="274">
+  <meta itemprop="keywords" content="Boot2root">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="stylesheet" href="/custom.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Bounty Hacker</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">OVERVIEW</a></li>
+    <li><a href="#nmap-scan">NMAP SCAN</a></li>
+    <li><a href="#ftp-service">FTP SERVICE.</a></li>
+    <li><a href="#bruteforcing">BRUTEFORCING.</a></li>
+    <li><a href="#priviledge-escalation">PRIVILEDGE ESCALATION.</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello guys and welcome to another writeup featuring linux priviledge escalation. This is an easy box on tryhackme and you can access it <a href="https://tryhackme.com/room/cowboyhacker">here</a></p>
+<h2 id="overview">OVERVIEW</h2>
+<p>Okay quick overview, so we will be trying to bruteforce ssh and get some credentials for the box. I had fun on it and I hope you will to so lets get to it.</p>
+<h2 id="nmap-scan">NMAP SCAN</h2>
+<p>First things first a quick nmap scan to check on the open ports.</p>
+<p><img src="https://i.ibb.co/4TvVRM9/nmap.png" alt="1"></p>
+<p>From the results we can see some ports open. For example; port 21, 22 and port 80.</p>
+<h2 id="ftp-service">FTP SERVICE.</h2>
+<p>Let us try and use the FTP service to  get into the machine since we can login as Anonymous.</p>
+<p><img src="https://i.ibb.co/1rw7023/ftp.png" alt="2"></p>
+<p>Aah yes we can see some files on the system. We will use get to well get the files to our own machine.</p>
+<h2 id="bruteforcing">BRUTEFORCING.</h2>
+<p>So next we will view the page that is hosted on port 80.</p>
+<p><img src="https://i.ibb.co/hDNQpc3/web.png" alt="3"></p>
+<p>We don&rsquo;t get a lot here but maybe we can use the names here as a users.txt and maybe bruteforce a username.
+We will also cat out the two file swe got. we can see that the locks.txt is actually a password list. The task.txt also gives us another name that can be the user.</p>
+<p>So using hydra we can actually run <strong>hydra ssh://ip -L users.txt -P locks.txt</strong></p>
+<p><img src="https://i.ibb.co/PGJPzTJ/creds.png" alt="4"></p>
+<p>Boom! We have a hit!</p>
+<h2 id="priviledge-escalation">PRIVILEDGE ESCALATION.</h2>
+<p>So next we should try and get root priviledges. so first we shall do <strong>sudo -l</strong> and we see that we can run (/var/tar) as root.</p>
+<p>So we shall hop over to <a href="https://gtfobins.github.io/gtfobins/tar/#Sudo">GTFO bins</a> and copy that command out to our machine.</p>
+<p><img src="https://i.ibb.co/G9t21vZ/privesc.png" alt="5"></p>
+<p>And there we have it. We are root.</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/boot2root/">Boot2root</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=%2f%2flocalhost%3a1313%2fposts%2fthm%2fbountyhacker%2f&amp;text=Bounty%20Hacker" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=%2f%2flocalhost%3a1313%2fposts%2fthm%2fbountyhacker%2f&title=Bounty%20Hacker" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/alice/">Alice in Wonderland</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/archangel/">Archangel</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/posts/thm/dogcat/">DogCat</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

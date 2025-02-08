@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tryhackme on Dexter</title>
+    <link>//localhost:1313/categories/tryhackme/</link>
+    <description>Recent content in Tryhackme on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Mar 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/categories/tryhackme/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chronicles</title>
+      <link>//localhost:1313/posts/thm/chronicle/</link>
+      <pubDate>Thu, 21 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/chronicle/</guid>
+      <description>&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;Today we have a medium box called chronicle where we do some git forensics to get a key that gives us some user access into the machine and then doing some bit of browser forensics that enables us to move laterally as another user. Where we now find a binary that we can use to escalate our privileges. Here is the challenge &lt;a href=&#34;https://tryhackme.com/r/room/chronicle&#34;&gt;link&lt;/a&gt;.&lt;/p&gt;&#xA;&lt;h1 id=&#34;enumaration&#34;&gt;Enumaration&lt;/h1&gt;&#xA;&lt;p&gt;So first of all we can start by doing some basic enumaration just to have a good idea of what our target looks like. First of all I like using &lt;code&gt;whatweb&lt;/code&gt; to get some juicy information like, we find that our target is running on ubuntu and powered by apache and the apache version.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Startup</title>
+      <link>//localhost:1313/posts/thm/startup/</link>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/startup/</guid>
+      <description>&lt;p&gt;Hello guys and welcome to another writeup which features an easy tryhackme box accessible &lt;a href=&#34;https://tryhackme.com/room/startup&#34;&gt;here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;introduction&#34;&gt;INTRODUCTION&lt;/h2&gt;&#xA;&lt;p&gt;Okay so first things first we obviously try and scan for open ports using &lt;code&gt;nmap&lt;/code&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;https://i.ibb.co/S7GVM8H/nmap.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;We can note down a few things and maybe get an idea of how we would attack the box.&lt;/p&gt;&#xA;&lt;p&gt;We see that the ports: 21(ftp), 22(ssh), 80(http), are open. Well we can use port 22(ssh) for later since we have no credentials. Then we see that we can connect to the port 21(ftp server) and login as &lt;code&gt;Anonymous&lt;/code&gt;. We then see two files on the server and we we can use get to load them into our machine.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Alice in Wonderland</title>
+      <link>//localhost:1313/posts/thm/alice/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/alice/</guid>
+      <description>&lt;p&gt;Hello and welcome to the tryhack me writeup &lt;a href=&#34;https://tryhackme.com/room/wonderland&#34;&gt;Alice on wonderland&lt;/a&gt;.&lt;/p&gt;&#xA;&lt;h1 id=&#34;overview&#34;&gt;OVERVIEW&lt;/h1&gt;&#xA;&lt;p&gt;So we will be trying to get some credentials and log in as a particular user and then try to escalate our priviledges to root and get the flag. With that said lets get to it&lt;/p&gt;&#xA;&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP SCAN&lt;/h1&gt;&#xA;&lt;p&gt;After a quick nmap scan we can see that the port 22 and port 80 are open.&#xA;&lt;img src=&#34;https://i.ibb.co/QpsyvgL/nmap.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;web-enumaration&#34;&gt;WEB ENUMARATION&lt;/h1&gt;&#xA;&lt;p&gt;From the previous nmap scan we can see that a web server is hosted on port 80 and we can use the IP to see it&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Archangel</title>
+      <link>//localhost:1313/posts/thm/archangel/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/archangel/</guid>
+      <description>&lt;p&gt;Hello guys and welcome to yet another writeup. This is ye another easy box on tryhackme and is accessible &lt;a href=&#34;https://tryhackme.com/room/archangel&#34;&gt;here&lt;/a&gt;&#xA;We shall tackle some awesome topics which include:&lt;/p&gt;&#xA;&lt;ol&gt;&#xA;&lt;li&gt;LFI.&lt;/li&gt;&#xA;&lt;li&gt;Priviledge exploitation.&lt;/li&gt;&#xA;&lt;li&gt;Web exploitation.&#xA;With that said let us get right to it&lt;/li&gt;&#xA;&lt;/ol&gt;&#xA;&lt;h2 id=&#34;nmap-scan&#34;&gt;NMAP scan.&lt;/h2&gt;&#xA;&lt;p&gt;As usual we are gonna start of by scanning open ports on our machine.&#xA;&lt;img src=&#34;https://i.ibb.co/ZVjYSZ9/nmap.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;We are able to see that port 80 is open and is hosting a web application.&#xA;we are able to view a home page which does not have alot on it but we can see a type of hostname&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bounty Hacker</title>
+      <link>//localhost:1313/posts/thm/bountyhacker/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/bountyhacker/</guid>
+      <description>&lt;p&gt;Hello guys and welcome to another writeup featuring linux priviledge escalation. This is an easy box on tryhackme and you can access it &lt;a href=&#34;https://tryhackme.com/room/cowboyhacker&#34;&gt;here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;overview&#34;&gt;OVERVIEW&lt;/h2&gt;&#xA;&lt;p&gt;Okay quick overview, so we will be trying to bruteforce ssh and get some credentials for the box. I had fun on it and I hope you will to so lets get to it.&lt;/p&gt;&#xA;&lt;h2 id=&#34;nmap-scan&#34;&gt;NMAP SCAN&lt;/h2&gt;&#xA;&lt;p&gt;First things first a quick nmap scan to check on the open ports.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>DogCat</title>
+      <link>//localhost:1313/posts/thm/dogcat/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/thm/dogcat/</guid>
+      <description>&lt;p&gt;Hello guys and welcome to yet another Tryhackme writeup. Today we will be handling a medium room which is accessible &lt;a href=&#34;https://tryhackme.com/room/dogcat&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;&#xA;&lt;p&gt;Well the methodology is quite similar to the Archangel methodology with quite a twist. Let&amp;rsquo;s begin.&lt;/p&gt;&#xA;&lt;h2 id=&#34;accessing-the-webpage&#34;&gt;ACCESSING THE WEBPAGE&lt;/h2&gt;&#xA;&lt;p&gt;So I ran an NMAP scan but that was not so productive, so I went directly into the site.&lt;/p&gt;&#xA;&lt;p&gt;First we see that the site has two buttons which when we click on dog for example, we get a picture of a dog.&#xA;&lt;img src=&#34;https://i.ibb.co/1K4zM53/dog.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
