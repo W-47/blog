@@ -1,7 +1,7 @@
-baseURL = 'https://w-47.github.io/'
+baseURL = '/'
 languageCode = 'en-us'
 title = 'Dexter'
-theme='binario'
+theme="binario"
 
 [Author]
   name = "Dexter"
