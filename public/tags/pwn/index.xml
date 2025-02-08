@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pwn on Dexter</title>
+    <link>http://localhost:1313/blog/tags/pwn/</link>
+    <description>Recent content in Pwn on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 23 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/blog/tags/pwn/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Perfectroot CTF 2024 Writeups</title>
+      <link>http://localhost:1313/blog/posts/p3rf3ctr00tctf_2024/</link>
+      <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/posts/p3rf3ctr00tctf_2024/</guid>
+      <description>&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;The p3rf3ctr00t CTF 2024 marked the debut of an exciting competition designed to challenge participants across diverse areas of cybersecurity. As one of the contributors of this event, I had the privilege of crafting some challenges that tested some problem solving skills.&lt;/p&gt;&#xA;&lt;p&gt;I will try and walk you through the design and solution of the challenges I created, providing insights into their concepts. Let&amp;rsquo;s learn.&lt;/p&gt;&#xA;&lt;h2 id=&#34;flow&#34;&gt;Flow&lt;/h2&gt;&#xA;&lt;p&gt;&lt;img src=&#34;https://gist.github.com/user-attachments/assets/d8a6dae0-b3ee-4420-8f1d-f3140f71830b&#34; alt=&#34;CTFD img&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;First we are met with the challenge name &lt;code&gt;Flow&lt;/code&gt;. This was a slight hint that we were to do something with overflows and memory corruption bugs as a whole. We are also provided with the connection where we can use &lt;code&gt;netcat&lt;/code&gt; to interact with the program from a remote instance.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

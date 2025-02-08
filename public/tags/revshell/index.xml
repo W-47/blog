@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Revshell on Dexter</title>
+    <link>http://localhost:1313/blog/tags/revshell/</link>
+    <description>Recent content in Revshell on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 05 Jan 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/blog/tags/revshell/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Startup</title>
+      <link>http://localhost:1313/blog/posts/thm/startup/</link>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/posts/thm/startup/</guid>
+      <description>&lt;p&gt;Hello guys and welcome to another writeup which features an easy tryhackme box accessible &lt;a href=&#34;https://tryhackme.com/room/startup&#34;&gt;here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;introduction&#34;&gt;INTRODUCTION&lt;/h2&gt;&#xA;&lt;p&gt;Okay so first things first we obviously try and scan for open ports using &lt;code&gt;nmap&lt;/code&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;https://i.ibb.co/S7GVM8H/nmap.png&#34; alt=&#34;1&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;We can note down a few things and maybe get an idea of how we would attack the box.&lt;/p&gt;&#xA;&lt;p&gt;We see that the ports: 21(ftp), 22(ssh), 80(http), are open. Well we can use port 22(ssh) for later since we have no credentials. Then we see that we can connect to the port 21(ftp server) and login as &lt;code&gt;Anonymous&lt;/code&gt;. We then see two files on the server and we we can use get to load them into our machine.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

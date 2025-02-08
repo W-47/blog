@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>GRAPHQL | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="GRAPHQL">
+  <meta itemprop="description" content="Hello and welcome to another writeup, this was actually a CTF hosted by she hacks and I will take you through, how to move your way through graphql API easily. I will be using Altair which is a browser extesion, easy to set up and use. Let us begin.
+WHAT IS GRAPHQL? Graphql is an open source data query and manipulation language for API and a query runtime engine. A GraphQL service is created by defining types and fields on those types, then providing functions for each field on each type.">
+  <meta itemprop="datePublished" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="wordCount" content="577">
+  <meta itemprop="keywords" content="Broken Authorization">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">GRAPHQL</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#what-is-graphql">WHAT IS GRAPHQL?</a></li>
+    <li><a href="#flag1">FLAG1</a></li>
+    <li><a href="#flag-2">FLAG 2</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello and welcome to another writeup, this was actually a CTF hosted by she hacks and I will take you through, how to move your way through graphql API easily. I will be using Altair which is a browser extesion, easy to set up and use.
+Let us begin.</p>
+<h2 id="what-is-graphql">WHAT IS GRAPHQL?</h2>
+<p>Graphql is an open source data query and manipulation language for API and a query runtime engine. A GraphQL service is created by defining types and fields on those types, then providing functions for each field on each type.</p>
+<p>With that said we can check on the challenge.</p>
+<h2 id="flag1">FLAG1</h2>
+<p><img src="https://i.ibb.co/ydhK5pJ/chall.png" alt="1"></p>
+<p>So on the challenge you are provided with a link which when you click on it, it displays a message that graphql is running. Okay now with our Altair extension set up we can use it. This would look like the following</p>
+<p><img src="https://i.ibb.co/hKJdrb2/altair.png" alt="2"></p>
+<p>So next we would ideally be needed to connect to one of the directories and we can use common directories which are <code>/graphql, /graphiql, /api, /api/graphql</code></p>
+<p>So basically on our left panel is where we would type in our queries and they would bring back a response on our right panel.</p>
+<p>An example would look like</p>
+<p><img src="https://i.ibb.co/crZ85zb/flag1.png" alt="3"></p>
+<p>Let us break that down, With first understanding how a query looks like</p>
+<p><img src="https://i.ibb.co/XxPCVYf/query.webp" alt="4"></p>
+<p>So we can see that the operation begins followed by the table and then the fields. Cool no we have a rough understanding of how a query looks like.</p>
+<p>The flag here is the decoded message.</p>
+<h2 id="flag-2">FLAG 2</h2>
+<p>So next we are going to try and get the other flag, with also playing around with some more operations.</p>
+<p>Using the query format explained before we can use that to create a user. We are going to use something called a mutation to do this.</p>
+<p>A mutation is a new fundamental type included in the schema to change or write data to a Graphql service. A best practice when working with mutations is to return the object of data the mutating operation affects. That means if we change something particular in a database, we should receive the thing we updated in response as we will see shortly.</p>
+<p>We are going to use the mutation create user and we will see a response on the right panel
+<img src="https://i.ibb.co/0Bt4b0J/createuser.png" alt="5"></p>
+<p>This means that we have successfully created a user and we can use the query <code>getusers</code> to confirm this
+<img src="https://i.ibb.co/9836sg1/getusers.png" alt="6"></p>
+<p>Then next we can try and use the mutation login using the credentials of the new user we have created
+<img src="https://i.ibb.co/FDMm9vB/login.png" alt="7"></p>
+<p>We then can get an access token which would help us with authorization and as an authorization header. We can add this token to the headers as follows</p>
+<p><img src="https://i.ibb.co/Pw3dJQP/accesstoken.png" alt="8"></p>
+<p><code>Note: Not authentication but authorization</code></p>
+<p>So then we can use the query <code>findnote</code> since the hint for challenge two required us to look for a hidden note, this we can do as;</p>
+<p><img src="https://i.ibb.co/FqCqwf1/privesc.png" alt="9"></p>
+<p>So immediately we notice that the response is we have no permissions for this, what about we use some broken authentication.</p>
+<p>We can do this by using the mutation <code>updateuser</code> with the query looking like so.</p>
+<p><img src="https://i.ibb.co/qj6y4MD/admin.png" alt="10"></p>
+<p>Looking at our response we see that our first name has been changed to admin, <code>isadmin</code> has been set to true and our email has been set to <code>admin@gmail.com</code></p>
+<p>Cool now let us try and look for the hidden flag with our <code>id</code> set to <code>1</code> since we are <code>admin</code>.</p>
+<p><img src="https://i.ibb.co/QQ4N76f/flag2.png" alt="11"></p>
+<p>Nice we get a response from the service where the body contains our encoded flag</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/broken-authorization/">Broken Authorization</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fgraphql%2f&amp;text=GRAPHQL" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fgraphql%2f&title=GRAPHQL" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

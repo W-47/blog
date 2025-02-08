@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Dexter</title>
+    <link>http://localhost:1313/blog/tags/</link>
+    <description>Recent content in Tags on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 23 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/blog/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Pwn</title>
+      <link>http://localhost:1313/blog/tags/pwn/</link>
+      <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/pwn/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Boot2root</title>
+      <link>http://localhost:1313/blog/tags/boot2root/</link>
+      <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/boot2root/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Hydra</title>
+      <link>http://localhost:1313/blog/tags/hydra/</link>
+      <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/hydra/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Privesc</title>
+      <link>http://localhost:1313/blog/tags/privesc/</link>
+      <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/privesc/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Tar Wildcard</title>
+      <link>http://localhost:1313/blog/tags/tar-wildcard/</link>
+      <pubDate>Wed, 12 Jun 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/tar-wildcard/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Binary Exploitation</title>
+      <link>http://localhost:1313/blog/tags/binary-exploitation/</link>
+      <pubDate>Thu, 21 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/binary-exploitation/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Web</title>
+      <link>http://localhost:1313/blog/tags/web/</link>
+      <pubDate>Thu, 21 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/web/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>KnightCTF</title>
+      <link>http://localhost:1313/blog/tags/knightctf/</link>
+      <pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/knightctf/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Tryhackme</title>
+      <link>http://localhost:1313/blog/tags/tryhackme/</link>
+      <pubDate>Wed, 10 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/tryhackme/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Broken Authorization</title>
+      <link>http://localhost:1313/blog/tags/broken-authorization/</link>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/broken-authorization/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Ftp</title>
+      <link>http://localhost:1313/blog/tags/ftp/</link>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/ftp/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Revshell</title>
+      <link>http://localhost:1313/blog/tags/revshell/</link>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/revshell/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Docker Escape</title>
+      <link>http://localhost:1313/blog/tags/docker-escape/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/docker-escape/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Endpoints</title>
+      <link>http://localhost:1313/blog/tags/endpoints/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/endpoints/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>HackTheBox</title>
+      <link>http://localhost:1313/blog/tags/hackthebox/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/hackthebox/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Python Library Hijacking</title>
+      <link>http://localhost:1313/blog/tags/python-library-hijacking/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/python-library-hijacking/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SOC Analyst</title>
+      <link>http://localhost:1313/blog/tags/soc-analyst/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/tags/soc-analyst/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Startup | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Startup">
+  <meta itemprop="description" content="Hello guys and welcome to another writeup which features an easy tryhackme box accessible here
+INTRODUCTION Okay so first things first we obviously try and scan for open ports using nmap
+We can note down a few things and maybe get an idea of how we would attack the box.
+We see that the ports: 21(ftp), 22(ssh), 80(http), are open. Well we can use port 22(ssh) for later since we have no credentials. Then we see that we can connect to the port 21(ftp server) and login as Anonymous. We then see two files on the server and we we can use get to load them into our machine.">
+  <meta itemprop="datePublished" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="wordCount" content="560">
+  <meta itemprop="keywords" content="Revshell,Privesc,Ftp">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Startup</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#introduction">INTRODUCTION</a></li>
+    <li><a href="#enumaration">ENUMARATION</a></li>
+    <li><a href="#reverse-shell">REVERSE SHELL</a></li>
+    <li><a href="#user">USER</a></li>
+    <li><a href="#privilege-escalation">PRIVILEGE ESCALATION</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello guys and welcome to another writeup which features an easy tryhackme box accessible <a href="https://tryhackme.com/room/startup">here</a></p>
+<h2 id="introduction">INTRODUCTION</h2>
+<p>Okay so first things first we obviously try and scan for open ports using <code>nmap</code></p>
+<p><img src="https://i.ibb.co/S7GVM8H/nmap.png" alt="1"></p>
+<p>We can note down a few things and maybe get an idea of how we would attack the box.</p>
+<p>We see that the ports: 21(ftp), 22(ssh), 80(http), are open. Well we can use port 22(ssh) for later since we have no credentials. Then we see that we can connect to the port 21(ftp server) and login as <code>Anonymous</code>. We then see two files on the server and we we can use get to load them into our machine.</p>
+<p><img src="https://i.ibb.co/bmHJ693/ftp.png" alt="2"></p>
+<h2 id="enumaration">ENUMARATION</h2>
+<p>Well after downloading the two files into our machines we don&rsquo;t get a lot of information out of it and we then can check out the web page hosted on port 80. Where we do not see a lot of information but we can actually use a directory brute force attack to discover hidden directories.</p>
+<p><img src="https://i.ibb.co/w4Crpkd/gobuster.png" alt="3"></p>
+<p>And we get a hit on <code>/files</code>. When we visit the page it looks something like this.</p>
+<p><img src="https://i.ibb.co/XS4yF8k/filecheck.png" alt="4"></p>
+<p>So looking closely we can see that we have a directory <code>ftp</code>, which would mean we can upload stuff, including a reverse shell.</p>
+<h2 id="reverse-shell">REVERSE SHELL</h2>
+<p>So logging back in the ftp server, we then can prepare a reverse shell on our machine, you can find it <a href="https://github.com/pentestmonkey/php-reverse-shell">here</a></p>
+<p>On our ftp server we can use the command <code>put revshell.php</code>. Remember the file should be within the same directory you are on for this to work.</p>
+<p>Then checking our ftp directory on our web page we can see that the file has been uploaded.</p>
+<p><img src="https://i.ibb.co/HFCbXkr/files.png" alt="5">.</p>
+<p>Then all we need to do is start a listener on our machine and click the file, easy peasy</p>
+<p><img src="https://i.ibb.co/QksJc28/initial.png" alt="6"></p>
+<h2 id="user">USER</h2>
+<p>So next what we need to do is try and login as one of the users, since as we are we cannot do alot on the machine. After some time of digging around I saw a <code>/incidents</code> directory which contained a pcap file. Which we could analyze using wireshark and maybe find something good.</p>
+<p>So on the machine we could setup a python server, and since the python version here is 2 we can use: <code>python -m SimpleHTTPServer port</code> to get it running</p>
+<p>Then on our machine we could use the <code>wget</code> to download the pcap file</p>
+<p>Now that we have the file we can fire up wireshark and start analyzing.
+We see a bunch of stuff but can then follow the TCP stream for better analysis, until we come across a very interesting stream.</p>
+<p><img src="https://i.ibb.co/whV5W6M/wireshark.png" alt="7"></p>
+<p>Here we can see a password, my guess is that is lennie&rsquo;s password. Let us try and ssh as Lennie</p>
+<p><img src="https://i.ibb.co/MSHzhBY/lennie.png" alt="8">
+And we are in as Lennie</p>
+<h2 id="privilege-escalation">PRIVILEGE ESCALATION</h2>
+<p>So ideally next we would try and escalate our privileges to root. When we look at the files here we can see that we have some scripts, interesting
+<img src="https://i.ibb.co/9ZMHLQ5/esca.png" alt="9"></p>
+<p>So basically <code>planner.sh</code> creates a list and outputs them to <code>startup list</code>. Well you cannot edit this script but, keen eye we see that there is also another script that runs <code>print.sh</code>. Maybe we can edit that and try and exploit that</p>
+<p><img src="https://i.ibb.co/9gxVj5G/privesc.png" alt="10"></p>
+<p>Yes we can edit that. So next would be to start up a listener on our machine and wait for a minute. Hopefully we get a shell.</p>
+<p><img src="https://i.ibb.co/WBXr1dC/root.png" alt="11"></p>
+<p>Ahuh and we are root!</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/revshell/">Revshell</a>
+			<a class="entry__tag btn" href="/blog/tags/privesc/">Privesc</a>
+			<a class="entry__tag btn" href="/blog/tags/ftp/">Ftp</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fstartup%2f&amp;text=Startup" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fstartup%2f&title=Startup" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/alice/">Alice in Wonderland</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/dogcat/">DogCat</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

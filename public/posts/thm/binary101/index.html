@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>pwn101 | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="pwn101">
+  <meta itemprop="description" content="Hello guys and welcome to my walkthrough along this journey of binary exploitation. In this wreiteup we shall be handling the pwn101 room on tryhackme. Before jumping into this room, there are some prerequisites to complete the challenges:
+1. C programming language 2. Assembly language (basics) 3. Some experience in reverse engineering, using debuggers, understanding low-level concepts 4. Python scripting and pwntools 5. A lot of patience Let’s learn.
+101 Introduction So we first begin with some easy task, I reckon it is gonna be a buffer overflow, I will explain this in the analysis parts. So basically we just need t we get an idea that this might be a simple buffer overflow. A buffer overflow or buffer overrun is an anomaly whereby a program writes data to a buffer beyond the buffer’s allocated memory, overwriting adjacent memory locations. Example would look like. ">
+  <meta itemprop="datePublished" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-01-05T00:00:00+00:00">
+  <meta itemprop="wordCount" content="351">
+  <meta itemprop="keywords" content="Tryhackme">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">pwn101</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#101">101</a>
+      <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#exploit">Exploit</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello guys and welcome to my walkthrough along this journey of binary exploitation. In this wreiteup we shall be handling the pwn101 room on <a href="https://tryhackme.com/room/pwn101">tryhackme</a>. Before jumping into this room, there are some prerequisites to complete the challenges:</p>
+<pre><code>1. C programming language
+2. Assembly language (basics)
+3. Some experience in reverse engineering, using debuggers, understanding low-level concepts
+4. Python scripting and pwntools
+5. A lot of patience
+</code></pre>
+<p>Let&rsquo;s learn.</p>
+<h2 id="101">101</h2>
+<h3 id="introduction">Introduction</h3>
+<p>So we first begin with some easy task, I reckon it is gonna be a buffer overflow, I will explain this in the analysis parts. So basically we just need t
+we get an idea that this might be a simple buffer overflow. A buffer overflow or buffer overrun is an anomaly whereby a program writes data to a buffer beyond the buffer&rsquo;s allocated memory, overwriting adjacent memory locations.
+Example would look like.
+<img src="https://i.ibb.co/3RLRrq8/example-overflow.png" alt="1"></p>
+<h3 id="analysis">Analysis</h3>
+<p>There are many ways to analyse a binary, the most common way being using disassemblers like IDA Pro, Ghidra, or radare2 to convert the binary machine code into assembly language. This allows you to analyze the low-level code, understand its instructions, and potentially reconstruct the source code.</p>
+<p>For this particular challenge we are going to fire up ghidra which would help us see the code the flow of the program.</p>
+<p>Here we can notice three things, first is that we have a dangerous function <em><strong>gets()</strong></em>. This reads a line from stdin into the buffer pointed to by s until either a terminating newline or EOF, which it replaces with a null byte (&rsquo;\0&rsquo;), otherwise the function will continue to store characters past the end of the buffer allowing us to over write the adjacent memory.</p>
+<p>Next we can also see that we have a funtion which calls to system. This is interesting.</p>
+<p><img src="https://i.ibb.co/h2SyLr5/ghidra.png" alt="2"></p>
+<h3 id="exploit">Exploit</h3>
+<p>To exploit this is very simple all we need to do is provide the program with 60 bytes and boom we spawn a shell. This can be easily done using the following <code>cyclic 60</code>, which creates a cyclic pattern. Then we can feed that to the program and boom we have a shell.</p>
+<p><img src="https://i.ibb.co/XbNcmQQ/shell.png" alt="3"></p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/tryhackme/">Tryhackme</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fbinary101%2f&amp;text=pwn101" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2fbinary101%2f&title=pwn101" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

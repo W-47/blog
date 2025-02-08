@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Alice in Wonderland | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Alice in Wonderland">
+  <meta itemprop="description" content="Hello and welcome to the tryhack me writeup Alice on wonderland.
+OVERVIEW So we will be trying to get some credentials and log in as a particular user and then try to escalate our priviledges to root and get the flag. With that said lets get to it
+NMAP SCAN After a quick nmap scan we can see that the port 22 and port 80 are open. WEB ENUMARATION From the previous nmap scan we can see that a web server is hosted on port 80 and we can use the IP to see it">
+  <meta itemprop="datePublished" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2023-12-31T00:00:00+00:00">
+  <meta itemprop="wordCount" content="501">
+  <meta itemprop="keywords" content="Boot2root,Python Library Hijacking,Privesc">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Alice in Wonderland</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#getting-roottxt">GETTING ROOT.TXT</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><p>Hello and welcome to the tryhack me writeup <a href="https://tryhackme.com/room/wonderland">Alice on wonderland</a>.</p>
+<h1 id="overview">OVERVIEW</h1>
+<p>So we will be trying to get some credentials and log in as a particular user and then try to escalate our priviledges to root and get the flag. With that said lets get to it</p>
+<h1 id="nmap-scan">NMAP SCAN</h1>
+<p>After a quick nmap scan we can see that the port 22 and port 80 are open.
+<img src="https://i.ibb.co/QpsyvgL/nmap.png" alt="1"></p>
+<h1 id="web-enumaration">WEB ENUMARATION</h1>
+<p>From the previous nmap scan we can see that a web server is hosted on port 80 and we can use the IP to see it</p>
+<p>This is what we see</p>
+<p><img src="https://i.ibb.co/7vp566b/web1.png" alt="2"></p>
+<p>Here we can use gobuster in an effort to find any directories that may be hidden.</p>
+<p><img src="https://i.ibb.co/SN7d9Dr/go1.png" alt="3"></p>
+<p>From the results of the first gobuster we see a hidden directory <code>/r</code>. When we go to the directory this is what we see</p>
+<p><img src="https://i.ibb.co/MRH7n2J/web2.png" alt="4"></p>
+<p>Frome the title we see that we are told to keep going. So we use gobuster on the directory again discovering more directories which make up the word <code>rabbit</code> (Follow the white rabbit)
+<img src="https://i.ibb.co/sPrf17g/web7.png" alt="5"></p>
+<p>We can view the page source on this.</p>
+<p><img src="https://i.ibb.co/QdyXz9f/creds.png" alt="6"></p>
+<p>Aah yes we get a username and maybe a password and we shall try to ssh to this user using the creds.
+<img src="https://i.ibb.co/3YVrnbK/ssh.png" alt="7"></p>
+<p>Yes we are able to login as alice.</p>
+<h1 id="usertxt">USER.TXT</h1>
+<p>Let us try to get the user.txt flag.</p>
+<p><img src="https://i.ibb.co/Lz8ptfC/user.png" alt="8"></p>
+<h1 id="priviledge-escalation">PRIVILEDGE ESCALATION</h1>
+<p>We notice that the user Alice cannot do much on this machine so we can try and escalate our priviledges in order to get the root.txt flag.
+We then see a python file on it and when we open it we notice that the script is trying to import a file called random</p>
+<p><img src="https://i.ibb.co/bbW46jt/walrusnano.png" alt="9"></p>
+<p>Here we can try and use python library hijacking. First we need to get the path followed when the script is importing random</p>
+<p><img src="https://i.ibb.co/KGx8LX4/syspath.png" alt="10"></p>
+<p>We then can create our own python script that will enable us to switch users to rabbit.</p>
+<p><img src="https://i.ibb.co/gFrLxzW/os.png" alt="11"></p>
+<p>Then we can run the command <code>sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py</code>. And we succesfully change to rabbit user
+<img src="https://i.ibb.co/VVGrXMb/changetorabbit.png" alt="12"></p>
+<p>Here we can see a binary called <code>teaParty</code> and when we try and run it we see that we can actually hijack the date binary to give us acces as another user.</p>
+<p><img src="https://i.ibb.co/TL7fTj1/teaparty.png" alt="13"></p>
+<p>First we will create another file like so:</p>
+<p><img src="https://i.ibb.co/QpdBXTy/date.png" alt="14"></p>
+<p>Then we will change the mode to execute and export the binary to PATH then we will run <code>./teaParty</code> again.
+And we ara able to change to hatter
+<img src="https://i.ibb.co/BV9wX5p/hatter.png" alt="15"></p>
+<p>We can then cd into <code>/home/hatter</code> directory and find a password
+<img src="https://i.ibb.co/2cj3Tty/password.png" alt="16"></p>
+<p>We can use this password to ssh into the machine as hatter. And we got a succesful login
+<img src="https://i.ibb.co/ZXKsQvs/sshhatter.png" alt="18"></p>
+<h2 id="getting-roottxt">GETTING ROOT.TXT</h2>
+<p>Here we can use <code>getcap -r /</code> in order to get the enabled capabilities, and we find out that the <code>setuid+ep</code> has been enabled on pearl.</p>
+<p><img src="https://i.ibb.co/F8kxG8f/getcap.png" alt="19"></p>
+<p>From here we can use some help from <a href="https://gtfobins.github.io/gtfobins/perl/#capabilities">GTFO bins</a> and we find a way to abuse pearl and get escalate to root <code>/usr/bin/perl -e 'use POSIX qw(setuid); POSIX::setuid(0); exec &quot;/bin/sh&quot;;'</code>.
+Then it is possible to cd into alice and get the root.txt</p>
+<p><img src="https://i.ibb.co/k5X4QpL/roottxt.png" alt="20"></p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/boot2root/">Boot2root</a>
+			<a class="entry__tag btn" href="/blog/tags/python-library-hijacking/">Python Library Hijacking</a>
+			<a class="entry__tag btn" href="/blog/tags/privesc/">Privesc</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2falice%2f&amp;text=Alice%20in%20Wonderland" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2fthm%2falice%2f&title=Alice%20in%20Wonderland" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/dogcat/">DogCat</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/archangel/">Archangel</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/bountyhacker/">Bounty Hacker</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

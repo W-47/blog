@@ -1,4 +1,4 @@
-baseURL = 'https://w-47.github.io/blog'
+baseURL = 'https://w-47.github.io/'
 languageCode = 'en-us'
 title = 'Dexter'
 theme='binario'

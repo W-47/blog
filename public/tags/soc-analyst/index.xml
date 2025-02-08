@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SOC Analyst on Dexter</title>
+    <link>http://localhost:1313/blog/tags/soc-analyst/</link>
+    <description>Recent content in SOC Analyst on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 31 Dec 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/blog/tags/soc-analyst/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Endpoint Security</title>
+      <link>http://localhost:1313/blog/posts/endpoint/</link>
+      <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/posts/endpoint/</guid>
+      <description>&lt;p&gt;Hello guys and today I will share with you some breif points that I was able to come up with on Endpoint security where we will talk about how endpoint security works and the various types of endpoint security solutions. With that said let us get into it.&lt;/p&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;Endpoints are physical devices that connect to and exchange information with a computer network. Some of these examples include, mobile devices, desktop computers, virtual machines, embedded devices and servers. This can then lead to defining what endpoint security.&#xA;Endpoint security or rather endpoint protection is the cyber security approach to defending endpoints&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

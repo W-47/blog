@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>KnightCTF on Dexter</title>
+    <link>http://localhost:1313/blog/tags/knightctf/</link>
+    <description>Recent content in KnightCTF on Dexter</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 21 Jan 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/blog/tags/knightctf/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>KnightCTF</title>
+      <link>http://localhost:1313/blog/posts/ctfs/knightctf/</link>
+      <pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/posts/ctfs/knightctf/</guid>
+      <description>&lt;h1 id=&#34;get-the-sword&#34;&gt;Get The Sword&lt;/h1&gt;&#xA;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Can you get the sword ?&#xA;Author : froghunter&#xA;Download Link - 1 : https://drive.google.com/file/d/1HsQMxiZlP5978DzqnoZs6g6QOnCzVm_G/view&#xA;&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Doing some basic file checks we see that the binary is a 32bit LSB executable which will really affect how we approach this challenge. The binary is also dynamically linked and not stripped.&lt;/p&gt;&#xA;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;dexter@lab:~/the-lab/knights/rev$ file get_sword    &#xA;get_sword: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, BuildID[sha1]=4a9b260935bf815a04350e3bb9e0e4422f504b2a, for GNU/Linux 4.4.0, not stripped&#xA;&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Now looking at the securities set with the binary, we see that it really is not protected. We have no canary, meaning we can perform a buffer overflow with ease. NX is also unkown which would make executing shellcode on the stack very possible. Also there is No Pie which would mean that the addresses will remain the same every time the binary is ran.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
